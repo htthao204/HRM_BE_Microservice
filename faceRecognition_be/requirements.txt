@@ -1,0 +1,8 @@
+flask
+fastapi
+uvicorn
+opencv-contrib-python
+numpy
+pandas
+mysql-connector-python
+Pillow

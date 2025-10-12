@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  mysql_db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: hrm_db
+      MYSQL_USER: htt150704
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "3307:3306"
+    networks:
+      - hrm_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  hrm_be_container:
+    build: .
+    container_name: hrm_be_container
+    environment:
+      DB_HOST: mysql_db
+      DB_USER: htt150704
+      DB_PASSWORD: 123456
+      DB_NAME: hrm_db
+      DB_DIALECT: mysql
+      DB_PORT: 3306
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    networks:
+      - hrm_network
+
+networks:
+  hrm_network:
+    driver: bridge
