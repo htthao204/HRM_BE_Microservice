@@ -1,15 +1,23 @@
-import os
-import mysql.connector
-from dotenv import load_dotenv
+import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
 
-# Đọc biến môi trường từ file .env
-load_dotenv()
+dotenv.config();
 
-def get_connection():
-    return mysql.connector.connect(
-        host=os.getenv("DB_HOST"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        port=os.getenv("DB_PORT")
-    )
+const { DB_NAME, DB_USER, DB_PASSWORD, DB_SOCKET_PATH } = process.env;
+
+export const sequelize = new Sequelize(DB_NAME!, DB_USER!, DB_PASSWORD!, {
+  dialect: "mysql",
+  dialectOptions: {
+    socketPath: DB_SOCKET_PATH, // Dùng đường dẫn socket đã khai báo
+  },
+  logging: false,
+});
+
+export const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("✅ Database connection established.");
+  } catch (error) {
+    console.error("❌ Unable to connect to the database:", error);
+  }
+};
