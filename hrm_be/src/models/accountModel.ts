@@ -4,7 +4,7 @@ import {
   Optional,
   BelongsToGetAssociationMixin,
 } from "sequelize";
-import sequelize from "../config/db";
+import { sequelize } from "../config/db";
 import Role from "./roleModel";
 
 interface AccountAttributes {

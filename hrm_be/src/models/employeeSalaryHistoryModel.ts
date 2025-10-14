@@ -1,5 +1,5 @@
 import { Model, Optional, DataTypes } from "sequelize";
-import sequelize from "../config/db";
+import { sequelize } from "../config/db";
 
 // 1. Interface cho các thuộc tính của bảng
 interface EmployeeSalaryHistoryAttributes {

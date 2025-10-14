@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../config/db"; // instance sequelize
+import { sequelize } from "../config/db"; // instance sequelize
 
 interface SpecialLeaveRuleAttributes {
   id: number;

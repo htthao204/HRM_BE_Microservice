@@ -1,5 +1,5 @@
 import { Model, DataTypes, Optional } from "sequelize";
-import sequelize from "../config/db"; // sửa path theo project của bạn
+import { sequelize } from "../config/db"; // sửa path theo project của bạn
 
 // 1. Interface cho các thuộc tính của bảng
 interface WorkShiftAttributes {
