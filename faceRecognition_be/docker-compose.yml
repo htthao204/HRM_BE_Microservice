@@ -1,15 +1,15 @@
+version: '3.3'
+
 services:
   backend:
     build: .
     ports:
-      - "5000:5000"
-    depends_on:
-      - mysql_db
-
-  mysql_db:
-    image: mysql:8.0
+      - "5000:8080"
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: HRM_db
-    ports:
-      - "3307:3306"
+      PYTHONPATH: /app
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+

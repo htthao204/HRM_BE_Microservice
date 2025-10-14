@@ -1,19 +1,15 @@
-# # config/db.py
-# import mysql.connector
-
-# def get_connection():
-#     return mysql.connector.connect(
-#         host="localhost",
-#         user="htt150704",
-#         password="123456",
-#         database="hrm_db"
-#     )
+import os
 import mysql.connector
+from dotenv import load_dotenv
+
+# Đọc biến môi trường từ file .env
+load_dotenv()
 
 def get_connection():
     return mysql.connector.connect(
-        host="mysql_db",  
-        user="root",
-        password="123456",
-        database="HRM_db"
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME"),
+        port=os.getenv("DB_PORT")
     )

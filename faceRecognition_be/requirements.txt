@@ -6,3 +6,6 @@ numpy
 pandas
 mysql-connector-python
 Pillow
+python-dotenv
+opencv-python-headless
+
