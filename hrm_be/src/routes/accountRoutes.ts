@@ -12,7 +12,7 @@ const accountRouters = Router();
 accountRouters.get(
   "/all",
   authentication,
-  authorize("view_account"),
+  //authorize("view_account"),
   getAllAccountsController
 );
 accountRouters.delete("/:id", authentication, deleteAccountController);

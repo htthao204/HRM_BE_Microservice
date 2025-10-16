@@ -9,7 +9,7 @@ const employeeRouters = Router();
 employeeRouters.get(
   "/all/page",
   authentication,
-  authorize("view_all_users"),
+  //authorize("view_all_users"),
   getAllEmployeeInforController
 );
 

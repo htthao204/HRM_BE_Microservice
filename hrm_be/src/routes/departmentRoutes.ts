@@ -15,7 +15,7 @@ const departmentRouters = Router();
 departmentRouters.get(
   "/all/page",
   authentication,
-  authorize("department_view_all"),
+  // authorize("department_view_all"),
   getAllDepartmentController
 );
 
@@ -23,7 +23,7 @@ departmentRouters.get(
 departmentRouters.post(
   "/",
   authentication,
-  authorize("department_create"),
+  // authorize("department_create"),
   createDepartmentController
 );
 
@@ -31,7 +31,7 @@ departmentRouters.post(
 departmentRouters.put(
   "/:id",
   authentication,
-  authorize("department_update"),
+  // authorize("department_update"),
   updateDepartmentController
 );
 
@@ -39,7 +39,7 @@ departmentRouters.put(
 departmentRouters.delete(
   "/:id",
   authentication,
-  authorize("department_delete"),
+  // authorize("department_delete"),
   deleteDepartmentController
 );
 
@@ -47,7 +47,7 @@ departmentRouters.delete(
 departmentRouters.get(
   "/:id",
   authentication,
-  authorize("department_view"),
+  // authorize("department_view"),
   getDepartmentByIdController
 );
 
