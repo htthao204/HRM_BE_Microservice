@@ -1,7 +1,11 @@
+import {
+  AttendanceRequest,
+  createAttendanceRequest,
+} from "../dto/request/attendanceRequest";
 import Attendance from "../models/attendanceModel";
 import AttendanceAttributes from "../models/attendanceModel";
 import AttendanceCreationAttributes from "../models/attendanceModel";
-import { Model } from "sequelize";
+
 interface PaginatedResult<T> {
   totalItems: number;
   totalPages: number;
@@ -47,9 +51,21 @@ export const getAttendanceById = async (id: number) => {
 };
 
 // Tạo mới chấm công
-export const createAttendance = async (data: AttendanceCreationAttributes) => {
+export const createAttendance = async (data: AttendanceRequest) => {
   try {
-    const newAttendance = await Attendance.create(data);
+    const attendanceRequest = createAttendanceRequest(data);
+
+    const newAttendance = await Attendance.create({
+      ...attendanceRequest,
+      date: new Date(attendanceRequest.date),
+      start_time: attendanceRequest.start_time
+        ? new Date(attendanceRequest.start_time)
+        : null,
+      end_time: attendanceRequest.end_time
+        ? new Date(attendanceRequest.end_time)
+        : null,
+    });
+
     return newAttendance.get({ plain: true });
   } catch (err) {
     console.error(err);

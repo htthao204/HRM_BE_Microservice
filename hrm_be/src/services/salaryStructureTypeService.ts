@@ -1,5 +1,5 @@
+import { SalaryStructureTypeRequest } from "../dto/request/salaryStructureTypeRequest";
 import SalaryStructureType from "../models/salaryStructureTypeModel";
-import SalaryStructureTypeAttributes from "../models/salaryStructureTypeModel";
 import SalaryStructureTypeCreationAttributes from "../models/salaryStructureTypeModel";
 interface PaginatedResult<T> {
   totalItems: number;
@@ -8,7 +8,7 @@ interface PaginatedResult<T> {
   data: T[];
 }
 
-// Lấy danh sách SalaryStructureType có phân trang
+// 📌 Lấy danh sách SalaryStructureType có phân trang
 export const getAllSalaryStructureTypes = async (
   page: number = 1,
   pageSize: number = 10
@@ -27,63 +27,71 @@ export const getAllSalaryStructureTypes = async (
       currentPage: page,
       data: rows,
     };
-  } catch (error: any) {
-    console.error(error);
+  } catch (error) {
+    console.error("Lỗi lấy danh sách SalaryStructureType:", error);
     throw new Error("Lấy danh sách cấu trúc lương thất bại");
   }
 };
 
-// Lấy 1 SalaryStructureType theo ID
+// 📌 Lấy 1 SalaryStructureType theo ID
 export const getSalaryStructureTypeById = async (id: number) => {
   try {
     const type = await SalaryStructureType.findByPk(id);
     if (!type) throw new Error("Cấu trúc lương không tồn tại");
     return type;
   } catch (err) {
-    console.error(err);
+    console.error("Lỗi getSalaryStructureTypeById:", err);
     throw new Error("Lấy cấu trúc lương thất bại");
   }
 };
 
-// Tạo mới SalaryStructureType
+// 📌 Tạo mới SalaryStructureType (dùng DTO request)
 export const createSalaryStructureType = async (
-  data: SalaryStructureTypeCreationAttributes
+  data: SalaryStructureTypeRequest
 ) => {
   try {
-    const newType = await SalaryStructureType.create(data);
+    const newType = await SalaryStructureType.create(
+      data as SalaryStructureTypeCreationAttributes
+    );
     return newType.get({ plain: true });
   } catch (err) {
-    console.error(err);
+    console.error("Lỗi createSalaryStructureType:", err);
     throw new Error("Tạo cấu trúc lương thất bại");
   }
 };
 
-// Cập nhật SalaryStructureType
+// 📌 Cập nhật SalaryStructureType
 export const updateSalaryStructureType = async (
   id: number,
-  data: Partial<SalaryStructureTypeAttributes>
+  data: Partial<SalaryStructureTypeRequest>
 ) => {
   try {
     const [updatedCount] = await SalaryStructureType.update(data, {
       where: { id },
     });
-    if (updatedCount === 0)
+
+    if (updatedCount === 0) {
       throw new Error("Không tìm thấy cấu trúc lương để cập nhật");
-    return await SalaryStructureType.findByPk(id);
+    }
+
+    const updated = await SalaryStructureType.findByPk(id);
+    if (!updated) throw new Error("Không thể lấy dữ liệu sau khi cập nhật");
+
+    return updated;
   } catch (err) {
-    console.error(err);
+    console.error("Lỗi updateSalaryStructureType:", err);
     throw new Error("Cập nhật cấu trúc lương thất bại");
   }
 };
 
-// Xóa SalaryStructureType
+// 📌 Xóa SalaryStructureType
 export const deleteSalaryStructureType = async (id: number) => {
   try {
     const deleted = await SalaryStructureType.destroy({ where: { id } });
     if (deleted === 0) throw new Error("Không tìm thấy cấu trúc lương để xóa");
     return deleted;
   } catch (err) {
-    console.error(err);
+    console.error("Lỗi deleteSalaryStructureType:", err);
     throw new Error("Xóa cấu trúc lương thất bại");
   }
 };

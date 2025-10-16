@@ -1,7 +1,8 @@
 import SalaryType from "../models/salaryTypeModel";
-import SalaryTypeAttributes from "../models/salaryTypeModel";
-import SalaryTypeCreationAttributes from "../models/salaryTypeModel";
-import { Model } from "sequelize";
+import {
+  SalaryTypeRequest,
+  createSalaryTypeRequest,
+} from "../dto/request/salaryTypeRequest";
 
 interface PaginatedResult<T> {
   totalItems: number;
@@ -10,14 +11,13 @@ interface PaginatedResult<T> {
   data: T[];
 }
 
-// Lấy danh sách SalaryType có phân trang
+// ✅ Lấy danh sách SalaryType có phân trang
 export const getAllSalaryTypes = async (
   page: number = 1,
   pageSize: number = 10
-): Promise<PaginatedResult<Model>> => {
+): Promise<PaginatedResult<SalaryType>> => {
   try {
     const offset = (page - 1) * pageSize;
-
     const { count, rows } = await SalaryType.findAndCountAll({
       limit: pageSize,
       offset,
@@ -30,40 +30,48 @@ export const getAllSalaryTypes = async (
       currentPage: page,
       data: rows,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error(error);
     throw new Error("Lấy danh sách loại lương thất bại");
   }
 };
 
-// Tạo SalaryType mới
-export const createSalaryType = async (
-  salaryType: SalaryTypeCreationAttributes
-) => {
+// ✅ Tạo SalaryType mới
+export const createSalaryType = async (data: SalaryTypeRequest) => {
   try {
-    const newItem = await SalaryType.create(salaryType);
+    const request = createSalaryTypeRequest(data);
+    const newItem = await SalaryType.create(request);
     return newItem.get({ plain: true });
-  } catch (error: any) {
+  } catch (error) {
     console.error(error);
     throw new Error("Tạo loại lương thất bại");
   }
 };
 
-// Cập nhật SalaryType
+// ✅ Cập nhật SalaryType
 export const updateSalaryType = async (
-  salaryType: Partial<SalaryTypeAttributes>,
-  id: number
+  id: number,
+  data: Partial<SalaryTypeRequest>
 ) => {
   try {
-    const updateData = await SalaryType.update(salaryType, { where: { id } });
-    return updateData;
+    const request = createSalaryTypeRequest({
+      name: data.name ?? "", // tránh undefined khi update
+      description: data.description,
+      is_active: data.is_active ?? true,
+    });
+
+    const [updated] = await SalaryType.update(request, { where: { id } });
+    if (updated === 0) throw new Error("Không tìm thấy loại lương để cập nhật");
+
+    const updatedRecord = await SalaryType.findByPk(id);
+    return updatedRecord;
   } catch (err) {
     console.error(err);
     throw new Error("Cập nhật loại lương thất bại");
   }
 };
 
-// Xóa SalaryType
+// ✅ Xóa SalaryType
 export const deleteSalaryType = async (id: number) => {
   try {
     const deletedCount = await SalaryType.destroy({ where: { id } });
@@ -74,7 +82,7 @@ export const deleteSalaryType = async (id: number) => {
   }
 };
 
-// Lấy SalaryType theo ID
+// ✅ Lấy SalaryType theo ID
 export const getSalaryTypeById = async (id: number) => {
   try {
     const item = await SalaryType.findByPk(id);

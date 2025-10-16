@@ -1,3 +1,4 @@
+import { SpecialLeaveRuleRequest } from "../dto/request/specialLeaveRuleRequest";
 import {
   SpecialLeaveRule,
   SpecialLeaveRuleAttributes,
@@ -11,13 +12,14 @@ interface PaginatedResult<T> {
   data: T[];
 }
 
-// Lấy danh sách special leave rules có phân trang
+// 📌 Lấy danh sách special leave rules có phân trang
 export const getAllSpecialLeaveRules = async (
   page: number = 1,
   pageSize: number = 10
 ): Promise<PaginatedResult<SpecialLeaveRule>> => {
   try {
     const offset = (page - 1) * pageSize;
+
     const { count, rows } = await SpecialLeaveRule.findAndCountAll({
       limit: pageSize,
       offset,
@@ -36,7 +38,7 @@ export const getAllSpecialLeaveRules = async (
   }
 };
 
-// Lấy theo ID
+// 📌 Lấy theo ID
 export const getSpecialLeaveRuleById = async (id: number) => {
   try {
     const rule = await SpecialLeaveRule.findByPk(id);
@@ -48,12 +50,12 @@ export const getSpecialLeaveRuleById = async (id: number) => {
   }
 };
 
-// Tạo mới
-export const createSpecialLeaveRule = async (
-  data: SpecialLeaveRuleCreationAttributes
-) => {
+// 📌 Tạo mới (dùng DTO request)
+export const createSpecialLeaveRule = async (data: SpecialLeaveRuleRequest) => {
   try {
-    const newRule = await SpecialLeaveRule.create(data);
+    const newRule = await SpecialLeaveRule.create(
+      data as SpecialLeaveRuleCreationAttributes
+    );
     return newRule.get({ plain: true });
   } catch (err) {
     console.error(err);
@@ -61,10 +63,10 @@ export const createSpecialLeaveRule = async (
   }
 };
 
-// Cập nhật
+// 📌 Cập nhật
 export const updateSpecialLeaveRule = async (
   id: number,
-  data: Partial<SpecialLeaveRuleAttributes>
+  data: Partial<SpecialLeaveRuleRequest>
 ) => {
   try {
     const [updatedCount] = await SpecialLeaveRule.update(data, {
@@ -72,14 +74,18 @@ export const updateSpecialLeaveRule = async (
     });
     if (updatedCount === 0)
       throw new Error("Không tìm thấy quy định để cập nhật");
-    return await SpecialLeaveRule.findByPk(id);
+
+    const updatedRule = await SpecialLeaveRule.findByPk(id);
+    if (!updatedRule) throw new Error("Không thể lấy dữ liệu sau khi cập nhật");
+
+    return updatedRule;
   } catch (err) {
     console.error(err);
     throw new Error("Cập nhật quy định nghỉ đặc biệt thất bại");
   }
 };
 
-// Xóa
+// 📌 Xóa
 export const deleteSpecialLeaveRule = async (id: number) => {
   try {
     const deletedCount = await SpecialLeaveRule.destroy({ where: { id } });

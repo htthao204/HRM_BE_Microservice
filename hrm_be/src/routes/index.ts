@@ -15,6 +15,7 @@ import workShiftRouter from "./workShiftRoutes";
 import overTimeRouter from "./overtimeRuleRoutes";
 import positionRouter from "./positionRoute";
 import accountRouters from "./accountRoutes";
+import attendanceLogRouter from "./attendanceLogRoutes";
 
 const router = Router();
 
@@ -41,4 +42,5 @@ router.use(
   authentication,
   employeePositionRouter
 );
+router.use("/attendance=logs", authentication, attendanceLogRouter);
 export default router;

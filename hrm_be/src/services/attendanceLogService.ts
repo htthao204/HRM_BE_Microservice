@@ -1,23 +1,23 @@
 import { Op } from "sequelize";
 import AttendanceLog from "../models/attendanceLogModel";
 import { EmployeeInformation } from "../models/employeeModel";
+import {
+  AttendanceLogRequest,
+  createAttendanceLogRequest,
+} from "../dto/request/attendanceLogRequest";
 
 // Tạo một attendance log mới
-export const createAttendanceLog = async (data: {
-  employee_id: number;
-  log_time: Date;
-  action: "CHECKIN" | "CHECKOUT";
-  source?: "DEVICE" | "FACE_RECOGNITION" | "MANUAL";
-}) => {
+export const createAttendanceLog = async (data: AttendanceLogRequest) => {
   try {
-    const log = await AttendanceLog.create(data);
+    // dùng factory để đảm bảo đúng định dạng
+    const logRequest = createAttendanceLogRequest(data);
+    const log = await AttendanceLog.create(logRequest);
     return log;
   } catch (error) {
     console.error("Error creating attendance log:", error);
     throw error;
   }
 };
-
 // Lấy tất cả attendance logs (có thể filter theo ngày)
 export const getAllAttendanceLogs = async (filter?: {
   startDate?: Date;
@@ -91,6 +91,28 @@ export const getLatestLogByEmployee = async (employee_id: number) => {
       `Error fetching latest log for employee ${employee_id}:`,
       error
     );
+    throw error;
+  }
+};
+// Cập nhật attendance log
+export const updateAttendanceLog = async (
+  id: number,
+  data: AttendanceLogRequest
+) => {
+  try {
+    const logRequest = createAttendanceLogRequest(data);
+    const [updated] = await AttendanceLog.update(logRequest, {
+      where: { id },
+    });
+
+    if (updated === 0) {
+      throw new Error(`Attendance log with id ${id} not found`);
+    }
+
+    const updatedLog = await AttendanceLog.findByPk(id);
+    return updatedLog;
+  } catch (error) {
+    console.error(`Error updating attendance log with id ${id}:`, error);
     throw error;
   }
 };

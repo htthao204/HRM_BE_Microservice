@@ -1,5 +1,3 @@
-// types/overtimeRule.ts
-
 // DTO cho request tạo/quản lý quy tắc tăng ca
 export interface OvertimeRuleRequest {
   name: string;
