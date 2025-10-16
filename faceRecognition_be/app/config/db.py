@@ -1,23 +1,33 @@
-import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
+import os
+import mysql.connector
+from dotenv import load_dotenv
 
-dotenv.config();
+load_dotenv()
 
-const { DB_NAME, DB_USER, DB_PASSWORD, DB_SOCKET_PATH } = process.env;
+def get_connection():
+    if os.getenv("CLOUD_RUN") == "true":
+        return mysql.connector.connect(
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME"),
+            unix_socket=os.getenv("DB_SOCKET_PATH")
+        )
+    else:
+        return mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME"),
+            port=int(os.getenv("DB_PORT", 3306))
+        )
 
-export const sequelize = new Sequelize(DB_NAME!, DB_USER!, DB_PASSWORD!, {
-  dialect: "mysql",
-  dialectOptions: {
-    socketPath: DB_SOCKET_PATH, // Dùng đường dẫn socket đã khai báo
-  },
-  logging: false,
-});
+def test_connection():
+    try:
+        conn = get_connection()
+        print("✅ Database connection established.")
+        conn.close()
+    except mysql.connector.Error as err:
+        print("❌ Unable to connect to the database:", err)
 
-export const testConnection = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log("✅ Database connection established.");
-  } catch (error) {
-    console.error("❌ Unable to connect to the database:", error);
-  }
-};
+if __name__ == "__main__":
+    test_connection()

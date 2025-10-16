@@ -1,0 +1,22 @@
+version: "3.3"
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: hrm_db
+      MYSQL_USER: htt1574
+      MYSQL_PASSWORD: Htt150704.
+    ports:
+      - "3307:3306"
+
+  hrm-be:
+    build: ./hrm_be
+    container_name: hrm-be
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - mysql
