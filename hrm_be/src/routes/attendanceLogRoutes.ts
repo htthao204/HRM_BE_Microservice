@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   getAllAttendanceLogsController,
   getAttendanceLogsByEmployeeController,
@@ -6,17 +6,18 @@ import {
   createAttendanceLogController,
 } from "../controllers/attendanceLogController";
 
-const attendanceLogRouter = express.Router();
+const router = Router();
 
-attendanceLogRouter.get("/", getAllAttendanceLogsController);
-attendanceLogRouter.get(
-  "/employee/:employeeId",
-  getAttendanceLogsByEmployeeController
-);
-attendanceLogRouter.get(
-  "/employee/:employeeId/latest",
-  getLatestLogByEmployeeController
-);
-attendanceLogRouter.post("/", createAttendanceLogController);
+// Lấy tất cả log
+router.get("/attendance", getAllAttendanceLogsController);
 
-export default attendanceLogRouter;
+// Lấy log của 1 nhân viên
+router.get("/attendance/:employeeId", getAttendanceLogsByEmployeeController);
+
+// Lấy log mới nhất
+router.get("/attendance/latest/:employeeId", getLatestLogByEmployeeController);
+
+// Tạo log mới
+router.post("/attendance", createAttendanceLogController);
+
+export default router;

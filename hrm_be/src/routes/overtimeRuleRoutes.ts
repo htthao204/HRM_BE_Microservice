@@ -15,7 +15,7 @@ const overTimeRuleRouter = express.Router();
 overTimeRuleRouter.get(
   "/",
   authentication,
-  authorize("overtime_rule_view_all"),
+  //authorize("overtime_rule_view_all"),
   getOvertimeRulesController
 );
 
@@ -23,7 +23,7 @@ overTimeRuleRouter.get(
 overTimeRuleRouter.get(
   "/:id",
   authentication,
-  authorize("overtime_rule_view"),
+  //authorize("overtime_rule_view"),
   getOvertimeRuleByIdController
 );
 
@@ -31,7 +31,7 @@ overTimeRuleRouter.get(
 overTimeRuleRouter.post(
   "/",
   authentication,
-  authorize("overtime_rule_create"),
+  //authorize("overtime_rule_create"),
   createOvertimeRuleController
 );
 
@@ -39,7 +39,7 @@ overTimeRuleRouter.post(
 overTimeRuleRouter.put(
   "/:id",
   authentication,
-  authorize("overtime_rule_update"),
+  //authorize("overtime_rule_update"),
   updateOvertimeRuleController
 );
 
@@ -47,7 +47,7 @@ overTimeRuleRouter.put(
 overTimeRuleRouter.delete(
   "/:id",
   authentication,
-  authorize("overtime_rule_delete"),
+  //authorize("overtime_rule_delete"),
   deleteOvertimeRuleController
 );
 

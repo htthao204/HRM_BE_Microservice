@@ -16,35 +16,35 @@ const leaveRouter = Router();
 leaveRouter.post(
   "/",
   authentication,
-  authorize("leave_create"),
+  // //authorize("leave_create"),
   createLeaveController
 );
 
 leaveRouter.get(
   "/",
   authentication,
-  authorize("leave_view_all"),
+  // //authorize("leave_view_all"),
   getAllLeavesController
 );
 
 leaveRouter.get(
   "/:id",
   authentication,
-  authorize("leave_view"),
+  // //authorize("leave_view"),
   getLeaveByIdController
 );
 
 leaveRouter.put(
   "/:id",
   authentication,
-  authorize("leave_update"),
+  // //authorize("leave_update"),
   updateLeaveController
 );
 
 leaveRouter.delete(
   "/:id",
   authentication,
-  authorize("leave_delete"),
+  // //authorize("leave_delete"),
   deleteLeaveController
 );
 

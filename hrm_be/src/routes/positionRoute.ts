@@ -7,7 +7,7 @@ import {
 } from "../controllers/positionController";
 import { Router } from "express";
 import { authentication } from "../middlewares/authMiddleware";
-import { authorize } from "../middlewares/authorizeMiddleware";
+import { authorize } from "../middlewares///authorizeMiddleware";
 
 const positionRouter = Router();
 
@@ -15,7 +15,7 @@ const positionRouter = Router();
 positionRouter.get(
   "/",
   authentication,
-  authorize("position_view_all"),
+  ////authorize("position_view_all"),
   getAllPositionsController
 );
 
@@ -23,7 +23,7 @@ positionRouter.get(
 positionRouter.get(
   "/:id",
   authentication,
-  authorize("position_view"),
+  ////authorize("position_view"),
   getPositionByIdController
 );
 
@@ -31,7 +31,7 @@ positionRouter.get(
 positionRouter.post(
   "/",
   authentication,
-  authorize("position_create"),
+  ////authorize("position_create"),
   createPositionController
 );
 
@@ -39,7 +39,7 @@ positionRouter.post(
 positionRouter.put(
   "/:id",
   authentication,
-  authorize("position_update"),
+  ////authorize("position_update"),
   updatePositionController
 );
 
@@ -47,7 +47,7 @@ positionRouter.put(
 positionRouter.delete(
   "/:id",
   authentication,
-  authorize("position_delete"),
+  ////authorize("position_delete"),
   deletePositionController
 );
 

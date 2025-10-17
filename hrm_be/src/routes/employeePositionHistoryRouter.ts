@@ -15,7 +15,7 @@ const employeePositionRouter = express.Router();
 employeePositionRouter.get(
   "/",
   authentication,
-  authorize("employee_position_history_view_all"),
+  ////authorize("employee_position_history_view_all"),
   getEmployeePositionHistoriesController
 );
 
@@ -23,7 +23,7 @@ employeePositionRouter.get(
 employeePositionRouter.get(
   "/:id",
   authentication,
-  authorize("employee_position_history_view"),
+  ////authorize("employee_position_history_view"),
   getEmployeePositionHistoryByIdController
 );
 
@@ -31,7 +31,7 @@ employeePositionRouter.get(
 employeePositionRouter.post(
   "/",
   authentication,
-  authorize("employee_position_history_create"),
+  ////authorize("employee_position_history_create"),
   createEmployeePositionHistoryController
 );
 
@@ -39,7 +39,7 @@ employeePositionRouter.post(
 employeePositionRouter.put(
   "/:id",
   authentication,
-  authorize("employee_position_history_update"),
+  // //authorize("employee_position_history_update"),
   updateEmployeePositionHistoryController
 );
 
@@ -47,7 +47,7 @@ employeePositionRouter.put(
 employeePositionRouter.delete(
   "/:id",
   authentication,
-  authorize("employee_position_history_delete"),
+  ////authorize("employee_position_history_delete"),
   deleteEmployeePositionHistoryController
 );
 

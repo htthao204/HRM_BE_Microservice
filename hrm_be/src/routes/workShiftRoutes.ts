@@ -14,35 +14,35 @@ const workShiftRouter = Router();
 workShiftRouter.get(
   "/",
   authentication,
-  authorize("workshift_view_all"),
+  ////authorize("workshift_view_all"),
   getAllWorkShiftsController
 );
 
 workShiftRouter.get(
   "/:id",
   authentication,
-  authorize("workshift_view"),
+  ////authorize("workshift_view"),
   getWorkShiftByIdController
 );
 
 workShiftRouter.post(
   "/",
   authentication,
-  authorize("workshift_create"),
+  ////authorize("workshift_create"),
   createWorkShiftController
 );
 
 workShiftRouter.put(
   "/:id",
   authentication,
-  authorize("workshift_update"),
+  ////authorize("workshift_update"),
   updateWorkShiftController
 );
 
 workShiftRouter.delete(
   "/:id",
   authentication,
-  authorize("workshift_delete"),
+  ////authorize("workshift_delete"),
   deleteWorkShiftController
 );
 

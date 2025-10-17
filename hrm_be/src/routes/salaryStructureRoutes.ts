@@ -14,35 +14,35 @@ const salaryStructureRouter = express.Router();
 salaryStructureRouter.get(
   "/",
   authentication,
-  authorize("salary_structure_type_view_all"),
+  ////authorize("salary_structure_type_view_all"),
   getSalaryStructureTypesController
 );
 
 salaryStructureRouter.get(
   "/:id",
   authentication,
-  authorize("salary_structure_type_view"),
+  ////authorize("salary_structure_type_view"),
   getSalaryStructureTypeByIdController
 );
 
 salaryStructureRouter.post(
   "/",
   authentication,
-  authorize("salary_structure_type_create"),
+  // //authorize("salary_structure_type_create"),
   createSalaryStructureTypeController
 );
 
 salaryStructureRouter.put(
   "/:id",
   authentication,
-  authorize("salary_structure_type_update"),
+  ////authorize("salary_structure_type_update"),
   updateSalaryStructureTypeController
 );
 
 salaryStructureRouter.delete(
   "/:id",
   authentication,
-  authorize("salary_structure_type_delete"),
+  ////authorize("salary_structure_type_delete"),
   deleteSalaryStructureTypeController
 );
 

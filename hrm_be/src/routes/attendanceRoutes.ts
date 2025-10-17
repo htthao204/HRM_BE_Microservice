@@ -15,42 +15,42 @@ const attendanceRouter = express.Router();
 attendanceRouter.get(
   "/",
   authentication,
-  authorize("attendance_view_all"),
+  //authorize("attendance_view_all"),
   getAttendancesController
 );
 
 attendanceRouter.get(
   "/employee/:employeeId",
   authentication,
-  authorize("attendance_view_by_employee"),
+  //authorize("attendance_view_by_employee"),
   getAttendancesByEmployeeIdController
 );
 
 attendanceRouter.get(
   "/:id",
   authentication,
-  authorize("attendance_view"),
+  //authorize("attendance_view"),
   getAttendanceByIdController
 );
 
 attendanceRouter.post(
   "/",
   authentication,
-  authorize("attendance_create"),
+  //authorize("attendance_create"),
   createAttendanceController
 );
 
 attendanceRouter.put(
   "/:id",
   authentication,
-  authorize("attendance_update"),
+  //authorize("attendance_update"),
   updateAttendanceController
 );
 
 attendanceRouter.delete(
   "/:id",
   authentication,
-  authorize("attendance_delete"),
+  //authorize("attendance_delete"),
   deleteAttendanceController
 );
 

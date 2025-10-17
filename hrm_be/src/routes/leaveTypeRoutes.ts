@@ -15,7 +15,7 @@ const leaveTypeRouter = express.Router();
 leaveTypeRouter.get(
   "/",
   authentication,
-  authorize("leave_type_view_all"),
+  // //authorize("leave_type_view_all"),
   getAllLeaveTypesController
 );
 
@@ -23,7 +23,7 @@ leaveTypeRouter.get(
 leaveTypeRouter.get(
   "/:id",
   authentication,
-  authorize("leave_type_view"),
+  // //authorize("leave_type_view"),
   getLeaveTypeByIdController
 );
 
@@ -31,7 +31,7 @@ leaveTypeRouter.get(
 leaveTypeRouter.post(
   "/",
   authentication,
-  authorize("leave_type_create"),
+  ////authorize("leave_type_create"),
   createLeaveTypeController
 );
 
@@ -39,7 +39,7 @@ leaveTypeRouter.post(
 leaveTypeRouter.put(
   "/:id",
   authentication,
-  authorize("leave_type_update"),
+  ////authorize("leave_type_update"),
   updateLeaveTypeController
 );
 
@@ -47,7 +47,7 @@ leaveTypeRouter.put(
 leaveTypeRouter.delete(
   "/:id",
   authentication,
-  authorize("leave_type_delete"),
+  ////authorize("leave_type_delete"),
   deleteLeaveTypeController
 );
 

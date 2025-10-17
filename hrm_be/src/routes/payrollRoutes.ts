@@ -15,7 +15,7 @@ const payrollRouter = express.Router();
 payrollRouter.get(
   "/",
   authentication,
-  authorize("payroll_view_all"),
+  ////authorize("payroll_view_all"),
   getPayrollsController
 );
 
@@ -23,7 +23,7 @@ payrollRouter.get(
 payrollRouter.get(
   "/:id",
   authentication,
-  authorize("payroll_view"),
+  // //authorize("payroll_view"),
   getPayrollByIdController
 );
 
@@ -31,7 +31,7 @@ payrollRouter.get(
 payrollRouter.post(
   "/",
   authentication,
-  authorize("payroll_create"),
+  // //authorize("payroll_create"),
   createPayrollController
 );
 
@@ -39,7 +39,7 @@ payrollRouter.post(
 payrollRouter.put(
   "/:id",
   authentication,
-  authorize("payroll_update"),
+  ////authorize("payroll_update"),
   updatePayrollController
 );
 
@@ -47,7 +47,7 @@ payrollRouter.put(
 payrollRouter.delete(
   "/:id",
   authentication,
-  authorize("payroll_delete"),
+  ////authorize("payroll_delete"),
   deletePayrollController
 );
 
