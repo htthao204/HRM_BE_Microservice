@@ -1,6 +1,8 @@
-import { DepartmentRequest } from "../dto/request/departmentRequest";
-import { Department } from "../models/departmentModel";
-import { Model } from "sequelize";
+import { Model } from 'sequelize';
+
+import { DepartmentRequest } from '../dto/request/departmentRequest';
+import { Department } from '../models/departmentModel';
+import { EmployeeInformation } from '../models/employeeModel'; // 👈 import thêm
 
 interface PaginatedResult<T> {
   totalItems: number;
@@ -9,7 +11,6 @@ interface PaginatedResult<T> {
   data: T[];
 }
 
-// Lấy danh sách Department có phân trang
 export const getAllDepartment = async (
   page: number = 1,
   pageSize: number = 10
@@ -21,6 +22,13 @@ export const getAllDepartment = async (
       limit: pageSize,
       offset,
       order: [["created_at", "DESC"]],
+      include: [
+        {
+          model: EmployeeInformation,
+          as: "manager",
+          attributes: ["id", "fullName", "email"], 
+        },
+      ],
     });
 
     return {

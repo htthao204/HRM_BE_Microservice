@@ -1,5 +1,11 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../config/db";
+import {
+  DataTypes,
+  Model,
+  Optional,
+} from 'sequelize';
+
+import sequelize from '../config/db';
+import { EmployeeInformation } from './employeeModel';
 
 interface DepartmentAttributes {
   id: number;
@@ -7,6 +13,7 @@ interface DepartmentAttributes {
   managerId?: number;
   created_at?: Date;
   updated_at?: Date;
+  deleted_at?: Date | null;
 }
 
 interface DepartmentCreationAttributes
@@ -17,7 +24,6 @@ export class Department extends Model<
   DepartmentCreationAttributes
 > {}
 
-// Khai báo init
 Department.init(
   {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -27,6 +33,7 @@ Department.init(
       field: "manager_id",
       allowNull: true,
     },
+    deleted_at: { type: DataTypes.DATE, allowNull: true },
   },
   {
     sequelize,
@@ -38,5 +45,10 @@ Department.init(
     paranoid: true,
   }
 );
+
+Department.belongsTo(EmployeeInformation, {
+  foreignKey: "managerId",
+  as: "manager",
+});
 
 export default Department;

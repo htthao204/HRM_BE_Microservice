@@ -1,0 +1,289 @@
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "thao123@gmail.com",
+  "password": "admin123",
+  "roleId":1
+}
+
+###Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "thao123@gmail.com",
+  "password": "admin123"
+}
+
+###
+POST http://localhost:5000/api/auth/refreshToken
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJxdXluaDQ1NiIsImlhdCI6MTc1ODM5MDk4MCwiZXhwIjoxNzU4OTk1NzgwfQ.i54wqS9a0LZKh4QHH8h1-d8n15ksbpyWo3ZFm9sJus0"
+}
+
+###
+GET /api/accounts/all HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwidXNlcm5hbWUiOiJhZG1pbl91c2VyIiwicm9sZXMiOlsiQWRtaW4iXSwicGVybWlzc2lvbnMiOlsiZGVwYXJ0bWVudHNfYWxsIiwiZGVwYXJ0bWVudF9jcmVhdGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3VwZGF0ZSIsImRlcGFydG1lbnRfZGVsZXRlIiwiZW1wbG95ZWVzX2FsbCIsImVtcGxveWVlX2NyZWF0ZSIsImVtcGxveWVlX3JlYWQiLCJlbXBsb3llZV91cGRhdGUiLCJlbXBsb3llZV9kZWxldGUiXSwiaWF0IjoxNzU5ODU3Mjk5LCJleHAiOjE3NTk4NjA4OTl9.HygbtAykpNxqm12O3IueVGcgvDzE8CHDxDiAQhOktEY
+Content-Type: application/json
+
+###
+DELETE http://localhost:5000/api/users/12
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIsInVzZXJuYW1lIjoicXV5bmg0NTYiLCJyb2xlcyI6WyJocl9tYW5hZ2VyIl0sInBlcm1pc3Npb25zIjpbXSwiaWF0IjoxNzU4NDI5MjM5LCJleHAiOjE3NTg0MzI4Mzl9.bvIKgaEH-bGPzHr0WWrEzLlB5fRT4xQytaVT8HN6xJ4
+
+
+###
+GET http://localhost:5000/api/employees/all/page
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywidXNlcm5hbWUiOiJ0aGFvMTIzQGdtYWlsLmNvbSIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbImRlcGFydG1lbnRzX2FsbCIsImRlcGFydG1lbnRfY3JlYXRlIiwiZGVwYXJ0bWVudF9yZWFkIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsImVtcGxveWVlc19hbGwiLCJlbXBsb3llZV9jcmVhdGUiLCJlbXBsb3llZV9yZWFkIiwiZW1wbG95ZWVfdXBkYXRlIiwiZW1wbG95ZWVfZGVsZXRlIiwiYWNjb3VudHNfYWxsIiwiYWNjb3VudF9jcmVhdGUiLCJhY2NvdW50X3JlYWQiLCJhY2NvdW50X3VwZGF0ZSIsImFjY291bnRfZGVsZXRlIiwicm9sZXNfYWxsIiwicm9sZV9jcmVhdGUiLCJyb2xlX3JlYWQiLCJyb2xlX3VwZGF0ZSIsInJvbGVfZGVsZXRlIl0sImlhdCI6MTc2MTA1ODU2MywiZXhwIjoxNzYxMDYyMTYzfQ.oHBZvgCwG1XoM2DIpfbtgd9SO0jPOLbBu3wyvHAb55g
+
+###
+GET http://localhost:5000/api/departments/all/page
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywidXNlcm5hbWUiOiJ0aGFvMTIzQGdtYWlsLmNvbSIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbImRlcGFydG1lbnRzX2FsbCIsImRlcGFydG1lbnRfY3JlYXRlIiwiZGVwYXJ0bWVudF9yZWFkIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsImVtcGxveWVlc19hbGwiLCJlbXBsb3llZV9jcmVhdGUiLCJlbXBsb3llZV9yZWFkIiwiZW1wbG95ZWVfdXBkYXRlIiwiZW1wbG95ZWVfZGVsZXRlIiwiYWNjb3VudHNfYWxsIiwiYWNjb3VudF9jcmVhdGUiLCJhY2NvdW50X3JlYWQiLCJhY2NvdW50X3VwZGF0ZSIsImFjY291bnRfZGVsZXRlIiwicm9sZXNfYWxsIiwicm9sZV9jcmVhdGUiLCJyb2xlX3JlYWQiLCJyb2xlX3VwZGF0ZSIsInJvbGVfZGVsZXRlIl0sImlhdCI6MTc2MTA1ODU2MywiZXhwIjoxNzYxMDYyMTYzfQ.oHBZvgCwG1XoM2DIpfbtgd9SO0jPOLbBu3wyvHAb55g
+
+###
+POST http://localhost:5000/api/departments
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywidXNlcm5hbWUiOiJ0aGFvMTIzQGdtYWlsLmNvbSIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbImRlcGFydG1lbnRzX2FsbCIsImRlcGFydG1lbnRfY3JlYXRlIiwiZGVwYXJ0bWVudF9yZWFkIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsImVtcGxveWVlc19hbGwiLCJlbXBsb3llZV9jcmVhdGUiLCJlbXBsb3llZV9yZWFkIiwiZW1wbG95ZWVfdXBkYXRlIiwiZW1wbG95ZWVfZGVsZXRlIiwiYWNjb3VudHNfYWxsIiwiYWNjb3VudF9jcmVhdGUiLCJhY2NvdW50X3JlYWQiLCJhY2NvdW50X3VwZGF0ZSIsImFjY291bnRfZGVsZXRlIiwicm9sZXNfYWxsIiwicm9sZV9jcmVhdGUiLCJyb2xlX3JlYWQiLCJyb2xlX3VwZGF0ZSIsInJvbGVfZGVsZXRlIl0sImlhdCI6MTc2MTA1MzcyNCwiZXhwIjoxNzYxMDU3MzI0fQ.eczsLYCE3ktl2mNXb4sXipMzXSvCtgTsaRAMZw891Tk
+
+{
+  "name": "Phòng Kho",
+  "description": "Phòng phát triển phần mềm",
+  "managerId": 1
+}
+
+###
+PUT http://localhost:5000/api/departments/6
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywidXNlcm5hbWUiOiJ0aGFvMTIzQGdtYWlsLmNvbSIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbImRlcGFydG1lbnRzX2FsbCIsImRlcGFydG1lbnRfY3JlYXRlIiwiZGVwYXJ0bWVudF9yZWFkIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsImVtcGxveWVlc19hbGwiLCJlbXBsb3llZV9jcmVhdGUiLCJlbXBsb3llZV9yZWFkIiwiZW1wbG95ZWVfdXBkYXRlIiwiZW1wbG95ZWVfZGVsZXRlIiwiYWNjb3VudHNfYWxsIiwiYWNjb3VudF9jcmVhdGUiLCJhY2NvdW50X3JlYWQiLCJhY2NvdW50X3VwZGF0ZSIsImFjY291bnRfZGVsZXRlIiwicm9sZXNfYWxsIiwicm9sZV9jcmVhdGUiLCJyb2xlX3JlYWQiLCJyb2xlX3VwZGF0ZSIsInJvbGVfZGVsZXRlIl0sImlhdCI6MTc2MTA1MzcyNCwiZXhwIjoxNzYxMDU3MzI0fQ.eczsLYCE3ktl2mNXb4sXipMzXSvCtgTsaRAMZw891Tk
+
+{
+  "name": "Phòng Kho",
+  "description": "Phòng phát triển phần mềm",
+  "managerId": 1
+}
+
+###
+DELETE http://localhost:5000/api/departments/8
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywidXNlcm5hbWUiOiJ0aGFvMTIzQGdtYWlsLmNvbSIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbImRlcGFydG1lbnRzX2FsbCIsImRlcGFydG1lbnRfY3JlYXRlIiwiZGVwYXJ0bWVudF9yZWFkIiwiZGVwYXJ0bWVudF91cGRhdGUiLCJkZXBhcnRtZW50X2RlbGV0ZSIsImVtcGxveWVlc19hbGwiLCJlbXBsb3llZV9jcmVhdGUiLCJlbXBsb3llZV9yZWFkIiwiZW1wbG95ZWVfdXBkYXRlIiwiZW1wbG95ZWVfZGVsZXRlIiwiYWNjb3VudHNfYWxsIiwiYWNjb3VudF9jcmVhdGUiLCJhY2NvdW50X3JlYWQiLCJhY2NvdW50X3VwZGF0ZSIsImFjY291bnRfZGVsZXRlIiwicm9sZXNfYWxsIiwicm9sZV9jcmVhdGUiLCJyb2xlX3JlYWQiLCJyb2xlX3VwZGF0ZSIsInJvbGVfZGVsZXRlIl0sImlhdCI6MTc2MTA1ODU2MywiZXhwIjoxNzYxMDYyMTYzfQ.oHBZvgCwG1XoM2DIpfbtgd9SO0jPOLbBu3wyvHAb55g
+
+###
+GET http://localhost:5000/api/departments/14
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbbnVsbCxudWxsLG51bGwsbnVsbF0sImlhdCI6MTc1ODk2NjM4NCwiZXhwIjoxNzU4OTY5OTg0fQ.heq60tvUpNDfkJeTGnLeWn6g51C2b4amUB0fSRsdkLc
+
+
+###
+GET http://localhost:5000/api/overtime-rules
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwidXNlcm5hbWUiOiJhZG1pbl91c2VyIiwicm9sZXMiOlsiQWRtaW4iXSwicGVybWlzc2lvbnMiOlsiZGVwYXJ0bWVudHNfYWxsIiwiZGVwYXJ0bWVudF9jcmVhdGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3VwZGF0ZSIsImRlcGFydG1lbnRfZGVsZXRlIiwiZW1wbG95ZWVzX2FsbCIsImVtcGxveWVlX2NyZWF0ZSIsImVtcGxveWVlX3JlYWQiLCJlbXBsb3llZV91cGRhdGUiLCJlbXBsb3llZV9kZWxldGUiXSwiaWF0IjoxNzU5ODU3Mjk5LCJleHAiOjE3NTk4NjA4OTl9.HygbtAykpNxqm12O3IueVGcgvDzE8CHDxDiAQhOktEY
+
+
+###
+GET http://localhost:5000/api/overtime-rules/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbbnVsbCxudWxsLG51bGwsbnVsbF0sImlhdCI6MTc1OTMxMjg0MiwiZXhwIjoxNzU5MzE2NDQyfQ.t-IIuUDGbCPetAzea0DINoyp8uTcLaAPI6-aUxqiTqs
+
+###
+PUT http://localhost:5000/api/overtime-rules/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbbnVsbCxudWxsLG51bGwsbnVsbF0sImlhdCI6MTc1OTMxMjg0MiwiZXhwIjoxNzU5MzE2NDQyfQ.t-IIuUDGbCPetAzea0DINoyp8uTcLaAPI6-aUxqiTqs
+
+{
+    "name": "Tăng ca buổi đêm",
+    "multiplier": "1.50",
+    "createdAt": "2025-10-01T17:06:20.000Z",
+    "updatedAt": "2025-10-01T17:06:20.000Z"
+  }
+
+
+###
+POST http://localhost:5000/api/overtime-rules
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbbnVsbCxudWxsLG51bGwsbnVsbF0sImlhdCI6MTc1OTMxMjg0MiwiZXhwIjoxNzU5MzE2NDQyfQ.t-IIuUDGbCPetAzea0DINoyp8uTcLaAPI6-aUxqiTqs
+
+{
+  "name": "Tăng ca ngày đêm",
+  "multiplier": 3.5,
+  "start_hour": "08:00:00",
+  "end_hour": "10:00:00",
+  "description": "Áp dụng cho tăng ca ngày lễ"
+}
+
+###
+DELETE http://localhost:5000/api/overtime-rules/5
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzE2NDY5LCJleHAiOjE3NTkzMjAwNjl9.oCtIeR-tKkYeQc-6MiGmY7ktZQZ9q40jxcU2nSF9Gec
+
+###
+GET http://localhost:5000/api/positions
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwidXNlcm5hbWUiOiJhZG1pbl91c2VyIiwicm9sZXMiOlsiQWRtaW4iXSwicGVybWlzc2lvbnMiOlsiZGVwYXJ0bWVudHNfYWxsIiwiZGVwYXJ0bWVudF9jcmVhdGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3VwZGF0ZSIsImRlcGFydG1lbnRfZGVsZXRlIiwiZW1wbG95ZWVzX2FsbCIsImVtcGxveWVlX2NyZWF0ZSIsImVtcGxveWVlX3JlYWQiLCJlbXBsb3llZV91cGRhdGUiLCJlbXBsb3llZV9kZWxldGUiXSwiaWF0IjoxNzU5ODU3Mjk5LCJleHAiOjE3NTk4NjA4OTl9.HygbtAykpNxqm12O3IueVGcgvDzE8CHDxDiAQhOktEY
+
+###
+GET http://localhost:5000/api/positions/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwidXNlcm5hbWUiOiJhZG1pbl91c2VyIiwicm9sZXMiOlsiQWRtaW4iXSwicGVybWlzc2lvbnMiOlsiZGVwYXJ0bWVudHNfYWxsIiwiZGVwYXJ0bWVudF9jcmVhdGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3VwZGF0ZSIsImRlcGFydG1lbnRfZGVsZXRlIiwiZW1wbG95ZWVzX2FsbCIsImVtcGxveWVlX2NyZWF0ZSIsImVtcGxveWVlX3JlYWQiLCJlbXBsb3llZV91cGRhdGUiLCJlbXBsb3llZV9kZWxldGUiXSwiaWF0IjoxNzU5ODU3Mjk5LCJleHAiOjE3NTk4NjA4OTl9.HygbtAykpNxqm12O3IueVGcgvDzE8CHDxDiAQhOktEY
+
+###
+POST http://localhost:5000/api/positions
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzI3OTQ0LCJleHAiOjE3NTkzMzE1NDR9.VYTLOpWgl8wJulZsKUiKMm7J4OwBfJ0H6MkUuS_btiI
+
+{
+    "name": "Nhân viên ",
+    "description": "Quản lý hồ sơ, chấm công, nghỉ phép"
+}
+
+###
+PUT http://localhost:5000/api/positions/4
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzI3OTQ0LCJleHAiOjE3NTkzMzE1NDR9.VYTLOpWgl8wJulZsKUiKMm7J4OwBfJ0H6MkUuS_btiI
+
+{
+    "name": "Nhân viên Thảo ",
+    "description": "Quản lý hồ sơ, chấm công, nghỉ phép"
+}
+
+
+###
+DELETE http://localhost:5000/api/positions/4
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzI3OTQ0LCJleHAiOjE3NTkzMzE1NDR9.VYTLOpWgl8wJulZsKUiKMm7J4OwBfJ0H6MkUuS_btiI
+
+### work-shift
+GET http://localhost:5000/api/work-shifts
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzI3OTQ0LCJleHAiOjE3NTkzMzE1NDR9.VYTLOpWgl8wJulZsKUiKMm7J4OwBfJ0H6MkUuS_btiI
+
+### work-shift
+GET http://localhost:5000/api/work-shifts/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzI3OTQ0LCJleHAiOjE3NTkzMzE1NDR9.VYTLOpWgl8wJulZsKUiKMm7J4OwBfJ0H6MkUuS_btiI
+
+###
+PUT http://localhost:5000/api/work-shifts/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzI3OTQ0LCJleHAiOjE3NTkzMzE1NDR9.VYTLOpWgl8wJulZsKUiKMm7J4OwBfJ0H6MkUuS_btiI
+
+{
+    "name": "Ca đêm",
+    "startTime": "08:00:00",
+    "endTime": "12:00:00",
+    "totalHours": "4.00",
+    "created_at": "2025-09-27T13:50:32.000Z",
+    "updated_at": "2025-09-27T13:50:32.000Z"
+  }
+
+
+###
+DELETE http://localhost:5000/api/work-shifts/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzI3OTQ0LCJleHAiOjE3NTkzMzE1NDR9.VYTLOpWgl8wJulZsKUiKMm7J4OwBfJ0H6MkUuS_btiI
+
+{
+    "name": "Ca đêm",
+    "startTime": "08:00:00",
+    "endTime": "12:00:00",
+    "totalHours": "4.00",
+    "created_at": "2025-09-27T13:50:32.000Z",
+    "updated_at": "2025-09-27T13:50:32.000Z"
+  }
+
+
+
+###
+DELETE http://localhost:5000/api/work-shifts/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzI3OTQ0LCJleHAiOjE3NTkzMzE1NDR9.VYTLOpWgl8wJulZsKUiKMm7J4OwBfJ0H6MkUuS_btiI
+
+
+### leave type
+GET http://localhost:5000/api/leave-types
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzMxODA5LCJleHAiOjE3NTkzMzU0MDl9.kY6B9-BoP0IPJY5i4blaen03z-tGgkRe6FnhMI2X3t0
+
+### 
+GET http://localhost:5000/api/leave-types/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzMxODA5LCJleHAiOjE3NTkzMzU0MDl9.kY6B9-BoP0IPJY5i4blaen03z-tGgkRe6FnhMI2X3t0
+
+
+### 
+PUT http://localhost:5000/api/leave-types/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzMxODA5LCJleHAiOjE3NTkzMzU0MDl9.kY6B9-BoP0IPJY5i4blaen03z-tGgkRe6FnhMI2X3t0
+
+{
+  "name": "Nghỉ phép năm 5",
+  "description": "Nghỉ phép có lương",
+  "defaultDays": 12,
+  "createdAt": "2025-09-27T13:52:41.000Z",
+  "updatedAt": "2025-09-27T13:52:41.000Z"
+},
+
+### 
+DELETE http://localhost:5000/api/leave-types/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzMxODA5LCJleHAiOjE3NTkzMzU0MDl9.kY6B9-BoP0IPJY5i4blaen03z-tGgkRe6FnhMI2X3t0
+
+
+### leave  request
+GET http://localhost:5000/api/leaves
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzM1NTM1LCJleHAiOjE3NTkzMzkxMzV9.3vBrCo_SbweSy0P_S6-ETu2vMvmSCq0LUzIQovkxf3E
+
+### 
+GET http://localhost:5000/api/leaves/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzM1NTM1LCJleHAiOjE3NTkzMzkxMzV9.3vBrCo_SbweSy0P_S6-ETu2vMvmSCq0LUzIQovkxf3E
+
+### 
+DELETE http://localhost:5000/api/leaves/3
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzM1NTM1LCJleHAiOjE3NTkzMzkxMzV9.3vBrCo_SbweSy0P_S6-ETu2vMvmSCq0LUzIQovkxf3E
+
+### 
+PUT http://localhost:5000/api/leaves/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzM1NTM1LCJleHAiOjE3NTkzMzkxMzV9.3vBrCo_SbweSy0P_S6-ETu2vMvmSCq0LUzIQovkxf3E
+
+### attendance
+GET http://localhost:5000/api/attendance
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzM1NTM1LCJleHAiOjE3NTkzMzkxMzV9.3vBrCo_SbweSy0P_S6-ETu2vMvmSCq0LUzIQovkxf3E
+
+###
+GET http://localhost:5000/api/attendance/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzM1NTM1LCJleHAiOjE3NTkzMzkxMzV9.3vBrCo_SbweSy0P_S6-ETu2vMvmSCq0LUzIQovkxf3E
+
+
+###
+GET http://localhost:5000/api/attendance/employee/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwidXNlcm5hbWUiOiJhZG1pbl91c2VyIiwicm9sZXMiOlsiQWRtaW4iXSwicGVybWlzc2lvbnMiOlsiZGVwYXJ0bWVudHNfYWxsIiwiZGVwYXJ0bWVudF9jcmVhdGUiLCJkZXBhcnRtZW50X3JlYWQiLCJkZXBhcnRtZW50X3VwZGF0ZSIsImRlcGFydG1lbnRfZGVsZXRlIiwiZW1wbG95ZWVzX2FsbCIsImVtcGxveWVlX2NyZWF0ZSIsImVtcGxveWVlX3JlYWQiLCJlbXBsb3llZV91cGRhdGUiLCJlbXBsb3llZV9kZWxldGUiLCJhY2NvdW50c19hbGwiLCJhY2NvdW50X2NyZWF0ZSIsImFjY291bnRfcmVhZCIsImFjY291bnRfdXBkYXRlIiwiYWNjb3VudF9kZWxldGUiLCJyb2xlc19hbGwiLCJyb2xlX2NyZWF0ZSIsInJvbGVfcmVhZCIsInJvbGVfdXBkYXRlIiwicm9sZV9kZWxldGUiXSwiaWF0IjoxNzU5ODU4NzkwLCJleHAiOjE3NTk4NjIzOTB9.MKEMlSNoGfugRjT59Bo53Q3ZX6momygcZe0IYiReDc4
+
+
+###
+PUT http://localhost:5000/api/attendance/2
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsInVzZXJuYW1lIjoidmlldHRlbCIsInJvbGVzIjpbIkFkbWluIl0sInBlcm1pc3Npb25zIjpbIlZJRVdfQVRURU5EQU5DRSIsIkVESVRfQVRURU5EQU5DRSIsIkFQUFJPVkVfTEVBVkUiLCJWSUVXX1BBWVJPTEwiXSwiaWF0IjoxNzU5MzM5NDIzLCJleHAiOjE3NTkzNDMwMjN9.U4EUxSBsW3qHMrirHMWloA-zijhWNb7o207jgb80gE0
+
+{
+    "employee_id": 2,
+    "date": "2025-09-02",
+    "start_time": "08:05:00",
+    "start_status": "NORMAL",
+    "end_time": "17:10:00",
+    "end_status": "NORMAL",
+    "working_hours": "8.00",
+    "created_at": "2025-09-27T13:50:46.000Z",
+    "updated_at": "2025-09-27T13:50:46.000Z"
+  }
