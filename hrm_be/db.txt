@@ -213,7 +213,7 @@ CREATE TABLE employee_information (
   FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
-
+--ALTER TABLE employee_information ADD COLUMN deleted_at DATETIME NULL;
 drop table employee_information
 -- Thêm thông tin nhân viên tương ứng trong employee_information
 INSERT INTO employee_information (full_name, email, phone, department_id, position_id, hire_date, account_id) VALUES
@@ -273,6 +273,11 @@ CREATE TABLE employee_bank_accounts (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (employee_id) REFERENCES employee_information(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+INSERT INTO employee_bank_accounts (employee_id, bank_name, account_number, owner, account_type)
+VALUES
+(1, 'Vietcombank', '123456789', 'Nguyen Van A', 'Savings'),
+(2, 'Techcombank', '987654321', 'Tran Thi B', 'Checking'),
+(3, 'BIDV', '456789123', 'Le Van C', 'Savings');
 
 -- Work shifts
 CREATE TABLE work_shifts (

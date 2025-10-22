@@ -1,3 +1,4 @@
+import sequelize from "../config/db";
 import {
   EmployeeBankAccount,
   EmployeeInformation,
@@ -19,6 +20,21 @@ interface CreateEmployeeInput {
   departmentId?: number;
   positionId?: number;
   avatar?: string;
+  privateInfo?: {
+    dateOfBirth?: Date;
+    gender?: "Male" | "Female" | "Other";
+    nationalId?: string;
+    emailPrivate?: string;
+    phonePrivate?: string;
+    countryId?: number;
+    address?: string;
+  };
+  bankAccounts?: {
+    bankName?: string;
+    accountNumber?: string;
+    owner?: string;
+    accountType?: string;
+  }[];
 }
 
 // Lấy danh sách nhân viên phân trang
@@ -53,13 +69,47 @@ export const getAllEmployeeInfor = async (
 
 // Tạo nhân viên
 export const createEmployee = async (employee: CreateEmployeeInput) => {
+  const t = await sequelize.transaction();
   try {
-    const newEmployee = await EmployeeInformation.create({
-      ...employee,
-    });
+    // Tạo nhân viên
+    const newEmployee = await EmployeeInformation.create(
+      {
+        fullName: employee.fullName,
+        email: employee.email,
+        accountId: employee.accountId,
+        phone: employee.phone,
+        hireDate: employee.hireDate,
+        departmentId: employee.departmentId,
+        positionId: employee.positionId,
+        avatar: employee.avatar,
+      },
+      { transaction: t }
+    );
 
+    // Tạo private info nếu có
+    if (employee.privateInfo) {
+      await EmployeePrivateInformation.create(
+        {
+          ...employee.privateInfo,
+          employeeId: newEmployee.id,
+        },
+        { transaction: t }
+      );
+    }
+
+    // Tạo bank accounts nếu có
+    if (employee.bankAccounts?.length) {
+      const bankData = employee.bankAccounts.map((b) => ({
+        ...b,
+        employeeId: newEmployee.id,
+      }));
+      await EmployeeBankAccount.bulkCreate(bankData, { transaction: t });
+    }
+
+    await t.commit();
     return newEmployee.get({ plain: true });
-  } catch (error: any) {
+  } catch (error) {
+    await t.rollback();
     console.error(error);
     throw new Error("Tạo nhân viên thất bại");
   }
