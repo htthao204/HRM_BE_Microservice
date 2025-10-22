@@ -68,10 +68,56 @@ export const getAllEmployeeInfor = async (
 };
 
 // Tạo nhân viên
+// export const createEmployee = async (employee: CreateEmployeeInput) => {
+//   const t = await sequelize.transaction();
+//   try {
+//     // Tạo nhân viên
+//     const newEmployee = await EmployeeInformation.create(
+//       {
+//         fullName: employee.fullName,
+//         email: employee.email,
+//         accountId: employee.accountId,
+//         phone: employee.phone,
+//         hireDate: employee.hireDate,
+//         departmentId: employee.departmentId,
+//         positionId: employee.positionId,
+//         avatar: employee.avatar,
+//       },
+//       { transaction: t }
+//     );
+
+//     // Tạo private info nếu có
+//     if (employee.privateInfo) {
+//       await EmployeePrivateInformation.create(
+//         {
+//           ...employee.privateInfo,
+//           employeeId: newEmployee.id,
+//         },
+//         { transaction: t }
+//       );
+//     }
+
+//     // Tạo bank accounts nếu có
+//     if (employee.bankAccounts?.length) {
+//       const bankData = employee.bankAccounts.map((b) => ({
+//         ...b,
+//         employeeId: newEmployee.id,
+//       }));
+//       await EmployeeBankAccount.bulkCreate(bankData, { transaction: t });
+//     }
+
+//     await t.commit();
+//     return newEmployee.get({ plain: true });
+//   } catch (error) {
+//     await t.rollback();
+//     console.error(error);
+//     throw new Error("Tạo nhân viên thất bại");
+//   }
+// };
 export const createEmployee = async (employee: CreateEmployeeInput) => {
   const t = await sequelize.transaction();
   try {
-    // Tạo nhân viên
+    // 1️⃣ Tạo nhân viên
     const newEmployee = await EmployeeInformation.create(
       {
         fullName: employee.fullName,
@@ -86,7 +132,7 @@ export const createEmployee = async (employee: CreateEmployeeInput) => {
       { transaction: t }
     );
 
-    // Tạo private info nếu có
+    // 2️⃣ Tạo private info nếu có
     if (employee.privateInfo) {
       await EmployeePrivateInformation.create(
         {
@@ -97,7 +143,7 @@ export const createEmployee = async (employee: CreateEmployeeInput) => {
       );
     }
 
-    // Tạo bank accounts nếu có
+    // 3️⃣ Tạo bank accounts nếu có
     if (employee.bankAccounts?.length) {
       const bankData = employee.bankAccounts.map((b) => ({
         ...b,
@@ -106,8 +152,17 @@ export const createEmployee = async (employee: CreateEmployeeInput) => {
       await EmployeeBankAccount.bulkCreate(bankData, { transaction: t });
     }
 
+    // 4️⃣ Fetch lại nhân viên cùng quan hệ để trả về đầy đủ
+    const createdEmployee = await EmployeeInformation.findByPk(newEmployee.id, {
+      include: [
+        { model: EmployeePrivateInformation, as: "privateInfo" },
+        { model: EmployeeBankAccount, as: "bankAccounts" },
+      ],
+      transaction: t,
+    });
+
     await t.commit();
-    return newEmployee.get({ plain: true });
+    return createdEmployee?.get({ plain: true });
   } catch (error) {
     await t.rollback();
     console.error(error);
