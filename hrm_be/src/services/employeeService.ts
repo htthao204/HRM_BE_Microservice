@@ -1,9 +1,13 @@
-import sequelize from "../config/db";
+import sequelize from '../config/db';
+import {
+  Department,
+  Position,
+} from '../models';
 import {
   EmployeeBankAccount,
   EmployeeInformation,
   EmployeePrivateInformation,
-} from "../models/employeeModel";
+} from '../models/employeeModel';
 
 interface PaginatedResult<T> {
   totalItems: number;
@@ -49,6 +53,8 @@ export const getAllEmployeeInfor = async (
       include: [
         { model: EmployeePrivateInformation, as: "privateInfo" },
         { model: EmployeeBankAccount, as: "bankAccounts" },
+        { model: Department, as: "department", attributes: ["id", "name"] },
+        { model: Position, as: "position", attributes: ["id", "name"] },
       ],
       limit: pageSize,
       offset,
