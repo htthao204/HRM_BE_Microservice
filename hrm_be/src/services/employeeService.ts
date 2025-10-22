@@ -10,7 +10,20 @@ interface PaginatedResult<T> {
   currentPage: number;
   data: T[];
 }
+interface CreateEmployeeInput {
+  fullName: string;
+  email: string;
+  accountId?: number;
+  phone?: string;
+  hireDate?: Date;
+  departmentId?: number;
+  positionId?: number;
+  avatar?: string;
+}
 
+// ==============================
+// Lấy danh sách nhân viên phân trang
+// ==============================
 export const getAllEmployeeInfor = async (
   page: number = 1,
   pageSize: number = 10
@@ -19,6 +32,7 @@ export const getAllEmployeeInfor = async (
     const offset = (page - 1) * pageSize;
 
     const { count, rows } = await EmployeeInformation.findAndCountAll({
+      where: { isDelete: false },
       include: [
         { model: EmployeePrivateInformation, as: "privateInfo" },
         { model: EmployeeBankAccount, as: "bankAccounts" },
@@ -37,5 +51,97 @@ export const getAllEmployeeInfor = async (
   } catch (error: any) {
     console.error(error);
     throw new Error("Lấy danh sách nhân viên thất bại");
+  }
+};
+
+// ==============================
+// Tạo nhân viên
+// ==============================
+export const createEmployee = async (employee: CreateEmployeeInput) => {
+  try {
+    // Gán isDelete ở đây
+    const newEmployee = await EmployeeInformation.create({
+      ...employee,
+      isDelete: false,
+    });
+
+    return newEmployee.get({ plain: true });
+  } catch (error: any) {
+    console.error(error);
+    throw new Error("Tạo nhân viên thất bại");
+  }
+};
+// ==============================
+// Cập nhật nhân viên
+// ==============================
+export const updateEmployee = async (
+  id: number,
+  employee: Partial<EmployeeInformation>
+) => {
+  try {
+    const [affectedRows] = await EmployeeInformation.update(employee, {
+      where: { id, isDelete: false },
+    });
+    return affectedRows;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error("Cập nhật nhân viên thất bại");
+  }
+};
+
+// ==============================
+// Lấy nhân viên theo ID
+// ==============================
+export const getEmployeeById = async (id: number) => {
+  try {
+    const employee = await EmployeeInformation.findOne({
+      where: { id, isDelete: false },
+      include: [
+        { model: EmployeePrivateInformation, as: "privateInfo" },
+        { model: EmployeeBankAccount, as: "bankAccounts" },
+      ],
+    });
+    if (!employee) throw new Error("Nhân viên không tồn tại");
+    return employee;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error("Lấy nhân viên thất bại");
+  }
+};
+
+// ==============================
+// Lấy danh sách nhân viên theo departmentId
+// ==============================
+export const getEmployeeByDepartmentId = async (
+  departmentId: number
+): Promise<EmployeeInformation[]> => {
+  try {
+    const employees = await EmployeeInformation.findAll({
+      where: { departmentId, isDelete: false },
+      include: [
+        { model: EmployeePrivateInformation, as: "privateInfo" },
+        { model: EmployeeBankAccount, as: "bankAccounts" },
+      ],
+    });
+    return employees;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error("Lấy nhân viên theo phòng ban thất bại");
+  }
+};
+
+// ==============================
+// Xóa nhân viên (soft delete)
+// ==============================
+export const deleteEmployee = async (id: number) => {
+  try {
+    const [affectedRows] = await EmployeeInformation.update(
+      { isDelete: true },
+      { where: { id, isDelete: false } }
+    );
+    return affectedRows;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error("Xóa nhân viên thất bại");
   }
 };

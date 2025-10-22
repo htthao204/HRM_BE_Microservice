@@ -116,3 +116,44 @@ export const updateAttendanceLog = async (
     throw error;
   }
 };
+export const getAttendanceLogsByEmployeePaginated = async (
+  employee_id: number,
+  page: number = 1,
+  pageSize: number = 10,
+  startDate?: Date,
+  endDate?: Date
+) => {
+  try {
+    const offset = (page - 1) * pageSize;
+    const whereClause: any = { employee_id };
+
+    if (startDate && endDate) {
+      whereClause.log_time = { [Op.between]: [startDate, endDate] };
+    } else if (startDate) {
+      whereClause.log_time = { [Op.gte]: startDate };
+    } else if (endDate) {
+      whereClause.log_time = { [Op.lte]: endDate };
+    }
+
+    const { count, rows } = await AttendanceLog.findAndCountAll({
+      where: whereClause,
+      include: [{ model: EmployeeInformation, as: "employee" }],
+      limit: pageSize,
+      offset,
+      order: [["log_time", "DESC"]],
+    });
+
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / pageSize),
+      currentPage: page,
+      data: rows,
+    };
+  } catch (error) {
+    console.error(
+      `Error fetching paginated logs for employee ${employee_id}:`,
+      error
+    );
+    throw error;
+  }
+};

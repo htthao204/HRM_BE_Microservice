@@ -1,6 +1,9 @@
 // services/leaveService.ts
+import { EmployeeInformation } from "../models";
 import { Leave } from "../models/leaveModel";
 import { Op } from "sequelize";
+import { LeaveType } from "../models/leaveTypeModel";
+import { LeaveSearchDTO } from "../dto/search/LeaveSearchDTO";
 
 // Tạo mới đơn xin nghỉ
 export const createLeave = async (leaveData: any) => {
@@ -105,5 +108,116 @@ export const deleteLeave = async (id: number) => {
   } catch (err: any) {
     console.error(err);
     throw new Error("Xóa đơn xin nghỉ thất bại");
+  }
+};
+// Lấy đơn xin nghỉ theo employeeId
+export const getLeavesByEmployeeId = async (employeeId: number) => {
+  try {
+    const leaves = await Leave.findAll({
+      where: { employeeId },
+      include: ["employee", "leaveType"],
+      order: [["createdAt", "DESC"]],
+    });
+    return leaves;
+  } catch (err: any) {
+    console.error(err);
+    throw new Error("Lấy đơn nghỉ theo nhân viên thất bại");
+  }
+};
+
+// Lấy đơn xin nghỉ theo leaveTypeId
+export const getLeavesByLeaveType = async (leaveTypeId: number) => {
+  try {
+    const leaves = await Leave.findAll({
+      where: { leaveTypeId },
+      include: ["employee", "leaveType"],
+      order: [["createdAt", "DESC"]],
+    });
+    return leaves;
+  } catch (err: any) {
+    console.error(err);
+    throw new Error("Lấy đơn nghỉ theo loại nghỉ thất bại");
+  }
+};
+
+// Lấy đơn nghỉ theo khoảng thời gian (startDate, endDate)
+export const getLeavesByDateRange = async (startDate: Date, endDate: Date) => {
+  try {
+    const leaves = await Leave.findAll({
+      where: {
+        startDate: { [Op.gte]: startDate },
+        endDate: { [Op.lte]: endDate },
+      },
+      include: ["employee", "leaveType"],
+      order: [["startDate", "ASC"]],
+    });
+    return leaves;
+  } catch (err: any) {
+    console.error(err);
+    throw new Error("Lấy đơn nghỉ theo khoảng thời gian thất bại");
+  }
+};
+export const getLeavesByFilter = async (
+  page: number = 1,
+  pageSize: number = 10,
+  dto?: LeaveSearchDTO
+) => {
+  try {
+    const offset = (page - 1) * pageSize;
+    const where: any = {};
+
+    if (dto) {
+      if (dto.employeeId) where.employeeId = dto.employeeId;
+      if (dto.status) where.status = dto.status;
+
+      if (dto.startDateFrom || dto.startDateTo) {
+        where.startDate = {};
+        if (dto.startDateFrom) where.startDate[Op.gte] = dto.startDateFrom;
+        if (dto.startDateTo) where.startDate[Op.lte] = dto.startDateTo;
+      }
+
+      if (dto.endDateFrom || dto.endDateTo) {
+        where.endDate = {};
+        if (dto.endDateFrom) where.endDate[Op.gte] = dto.endDateFrom;
+        if (dto.endDateTo) where.endDate[Op.lte] = dto.endDateTo;
+      }
+    }
+
+    const include: any[] = [
+      {
+        model: EmployeeInformation,
+        as: "employee",
+        where: dto?.employeeName
+          ? { name: { [Op.iLike]: `%${dto.employeeName.trim()}%` } }
+          : undefined,
+        required: !!dto?.employeeName,
+      },
+      {
+        model: LeaveType,
+        as: "leaveType",
+        where: dto?.leaveType
+          ? { name: { [Op.iLike]: `%${dto.leaveType.trim()}%` } }
+          : undefined,
+        required: !!dto?.leaveType,
+      },
+    ];
+
+    const result = await Leave.findAndCountAll({
+      where,
+      include,
+      limit: pageSize,
+      offset,
+      order: [["startDate", "ASC"]],
+    });
+
+    return {
+      totalItems: result.count,
+      totalPages: Math.ceil(result.count / pageSize),
+      currentPage: page,
+      data: result.rows,
+    };
+  } catch (err: any) {
+    console.error(err);
+    throw new Error("Lấy đơn nghỉ theo filter thất bại");
   }
 };

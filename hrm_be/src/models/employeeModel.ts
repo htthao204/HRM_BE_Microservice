@@ -14,6 +14,7 @@ interface EmployeeInformationAttributes {
   departmentId?: number;
   positionId?: number;
   avatar?: string;
+  isDelete?: boolean;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -59,6 +60,7 @@ EmployeeInformation.init(
       allowNull: true,
     },
     avatar: { type: DataTypes.STRING(255), allowNull: true },
+    isDelete: { type: DataTypes.BOOLEAN, defaultValue: false }, // thêm cột
   },
   {
     sequelize,

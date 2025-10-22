@@ -1,4 +1,3 @@
-// routes/leaveRoutes.ts
 import { Router } from "express";
 import { authentication } from "./../middlewares/authMiddleware";
 import { authorize } from "./../middlewares/authorizeMiddleware";
@@ -9,43 +8,47 @@ import {
   getAllLeavesController,
   updateLeaveController,
   deleteLeaveController,
+  getLeavesByEmployeeIdController,
+  getLeavesByLeaveTypeController,
+  getLeavesByDateRangeController,
+  getLeavesByFilterController,
 } from "../controllers/leaveController";
 
 const leaveRouter = Router();
 
-leaveRouter.post(
-  "/",
-  authentication,
-  // //authorize("leave_create"),
-  createLeaveController
-);
+// Tạo mới đơn nghỉ
+leaveRouter.post("/", authentication, createLeaveController);
 
+// Lấy tất cả đơn nghỉ
+leaveRouter.get("/", authentication, getAllLeavesController);
+
+// Lấy đơn nghỉ theo ID
+leaveRouter.get("/:id", authentication, getLeaveByIdController);
+
+// Cập nhật đơn nghỉ
+leaveRouter.put("/:id", authentication, updateLeaveController);
+
+// Xóa đơn nghỉ
+leaveRouter.delete("/:id", authentication, deleteLeaveController);
+
+// Lấy đơn nghỉ theo employeeId
 leaveRouter.get(
-  "/",
+  "/employee/:employeeId",
   authentication,
-  // //authorize("leave_view_all"),
-  getAllLeavesController
+  getLeavesByEmployeeIdController
 );
 
+// Lấy đơn nghỉ theo leaveTypeId
 leaveRouter.get(
-  "/:id",
+  "/type/:leaveTypeId",
   authentication,
-  // //authorize("leave_view"),
-  getLeaveByIdController
+  getLeavesByLeaveTypeController
 );
 
-leaveRouter.put(
-  "/:id",
-  authentication,
-  // //authorize("leave_update"),
-  updateLeaveController
-);
+// Lấy đơn nghỉ theo khoảng ngày
+leaveRouter.get("/daterange", authentication, getLeavesByDateRangeController);
 
-leaveRouter.delete(
-  "/:id",
-  authentication,
-  // //authorize("leave_delete"),
-  deleteLeaveController
-);
+// Lấy đơn nghỉ theo filter tổng hợp (employeeId, leaveTypeId, startDate, endDate)
+leaveRouter.get("/filter", authentication, getLeavesByFilterController);
 
 export default leaveRouter;

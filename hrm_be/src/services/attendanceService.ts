@@ -1,10 +1,4 @@
-import {
-  AttendanceRequest,
-  createAttendanceRequest,
-} from "../dto/request/attendanceRequest";
 import Attendance from "../models/attendanceModel";
-import AttendanceAttributes from "../models/attendanceModel";
-import AttendanceCreationAttributes from "../models/attendanceModel";
 
 interface PaginatedResult<T> {
   totalItems: number;
@@ -51,19 +45,19 @@ export const getAttendanceById = async (id: number) => {
 };
 
 // Tạo mới chấm công
-export const createAttendance = async (data: AttendanceRequest) => {
+export const createAttendance = async (data: {
+  employee_id: number;
+  date: Date;
+  working_hours?: number;
+  total_checkin?: number;
+  total_checkout?: number;
+}) => {
   try {
-    const attendanceRequest = createAttendanceRequest(data);
-
     const newAttendance = await Attendance.create({
-      ...attendanceRequest,
-      date: new Date(attendanceRequest.date),
-      start_time: attendanceRequest.start_time
-        ? new Date(attendanceRequest.start_time)
-        : null,
-      end_time: attendanceRequest.end_time
-        ? new Date(attendanceRequest.end_time)
-        : null,
+      ...data,
+      working_hours: data.working_hours || 0,
+      total_checkin: data.total_checkin || 0,
+      total_checkout: data.total_checkout || 0,
     });
 
     return newAttendance.get({ plain: true });
@@ -76,7 +70,11 @@ export const createAttendance = async (data: AttendanceRequest) => {
 // Cập nhật chấm công
 export const updateAttendance = async (
   id: number,
-  data: Partial<AttendanceAttributes>
+  data: Partial<{
+    working_hours?: number;
+    total_checkin?: number;
+    total_checkout?: number;
+  }>
 ) => {
   try {
     const [updatedCount] = await Attendance.update(data, { where: { id } });
@@ -86,9 +84,7 @@ export const updateAttendance = async (
     }
 
     const updated = await Attendance.findByPk(id);
-    if (!updated) {
-      throw new Error("Không tìm thấy bản ghi sau khi cập nhật");
-    }
+    if (!updated) throw new Error("Không tìm thấy bản ghi sau khi cập nhật");
 
     return updated;
   } catch (err) {
@@ -109,8 +105,7 @@ export const deleteAttendance = async (id: number) => {
   }
 };
 
-// lay danh sach attendances theo employeeId co phan trang
-
+// Lấy danh sách attendances theo employeeId có phân trang
 export const getAttendancesByEmployeeId = async (
   employeeId: number,
   page: number = 1,
@@ -124,6 +119,7 @@ export const getAttendancesByEmployeeId = async (
       offset,
       order: [["date", "DESC"]],
     });
+
     return {
       totalItems: count,
       totalPages: Math.ceil(count / pageSize),

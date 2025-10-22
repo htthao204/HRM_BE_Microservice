@@ -6,11 +6,9 @@ interface AttendanceAttributes {
   id: number;
   employee_id: number;
   date: Date;
-  start_time?: Date | null;
-  start_status?: "NORMAL" | "FORGOT";
-  end_time?: Date | null;
-  end_status?: "NORMAL" | "FORGOT";
   working_hours?: number;
+  total_checkin?: number;
+  total_checkout?: number;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -19,11 +17,9 @@ interface AttendanceCreationAttributes
   extends Optional<
     AttendanceAttributes,
     | "id"
-    | "start_time"
-    | "start_status"
-    | "end_time"
-    | "end_status"
     | "working_hours"
+    | "total_checkin"
+    | "total_checkout"
     | "created_at"
     | "updated_at"
   > {}
@@ -35,11 +31,9 @@ export class Attendance
   declare id: number;
   declare employee_id: number;
   declare date: Date;
-  declare start_time?: Date | null;
-  declare start_status?: "NORMAL" | "FORGOT";
-  declare end_time?: Date | null;
-  declare end_status?: "NORMAL" | "FORGOT";
   declare working_hours?: number;
+  declare total_checkin?: number;
+  declare total_checkout?: number;
   declare created_at?: Date;
   declare updated_at?: Date;
 }
@@ -65,24 +59,16 @@ Attendance.init(
       type: DataTypes.DATEONLY,
       allowNull: false,
     },
-    start_time: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    start_status: {
-      type: DataTypes.ENUM("NORMAL", "FORGOT"),
-      defaultValue: "NORMAL",
-    },
-    end_time: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    end_status: {
-      type: DataTypes.ENUM("NORMAL", "FORGOT"),
-      defaultValue: "NORMAL",
-    },
     working_hours: {
       type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0,
+    },
+    total_checkin: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    total_checkout: {
+      type: DataTypes.INTEGER,
       defaultValue: 0,
     },
     created_at: {

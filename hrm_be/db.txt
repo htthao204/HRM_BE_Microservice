@@ -1,9 +1,8 @@
--- Xóa và tạo lại database
-DROP DATABASE IF EXISTS hrm_db;
+
 CREATE DATABASE hrm_db;
 USE hrm_db;
-
--- Bảng Roles & Permissions
+select * from employee
+-- Roles
 CREATE TABLE roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL UNIQUE,
@@ -12,68 +11,13 @@ CREATE TABLE roles (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Bảng ca làm việc
-CREATE TABLE work_shifts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,         -- tên ca, ví dụ "Ca sáng", "Ca tối"
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    total_hours DECIMAL(5,2) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+INSERT INTO roles (name, description) VALUES
+('Admin', 'Quản trị viên hệ thống với toàn quyền truy cập'),
+('HR', 'Quản lý nhân sự, chịu trách nhiệm về nhân viên và chấm công'),
+('Accountant', 'Kế toán, phụ trách bảng lương và báo cáo tài chính'),
+('Employee', 'Nhân viên thông thường với quyền truy cập giới hạn');
 
--- Bảng quy định làm thêm giờ
-CREATE TABLE overtime_rules (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    multiplier DECIMAL(5,2) NOT NULL,       -- hệ số lương OT
-    start_hour TIME NOT NULL,               -- thời gian bắt đầu OT
-    end_hour TIME NOT NULL,                 -- thời gian kết thúc OT
-    description TEXT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Bảng nghỉ phép đặc biệt
-CREATE TABLE special_leave_rules (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,             -- tên nghỉ đặc biệt, ví dụ "Ngày lễ", "Ngày hiếu"
-    days_allocated DECIMAL(5,2) DEFAULT 0, -- số ngày nghỉ đặc biệt được cấp
-    description TEXT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Lịch sử lương của nhân viên
-CREATE TABLE employee_salary_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id INT NOT NULL,
-    salary_structure_id INT NOT NULL,
-    salary_amount DECIMAL(15,2) NOT NULL,
-    effective_from DATE NOT NULL,
-    effective_to DATE NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employee_information(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (salary_structure_id) REFERENCES salary_structures(id) ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- Lịch sử chức vụ của nhân viên
-CREATE TABLE employee_position_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id INT NOT NULL,
-    position_id INT NOT NULL,
-    department_id INT NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employee_information(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE SET NULL ON UPDATE CASCADE,
-    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL ON UPDATE CASCADE
-);
-
+-- Permissions
 CREATE TABLE permissions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL UNIQUE,
@@ -82,6 +26,48 @@ CREATE TABLE permissions (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Departments permissions
+INSERT INTO permissions (name, description) VALUES
+('departments_all', 'Toàn quyền quản lý phòng ban'),
+('department_create', 'Thêm phòng ban mới'),
+('department_read', 'Xem thông tin phòng ban'),
+('department_update', 'Cập nhật thông tin phòng ban'),
+('department_delete', 'Xóa phòng ban');
+
+-- Employees permissions
+INSERT INTO permissions (name, description) VALUES
+('employees_all', 'Toàn quyền quản lý nhân viên'),
+('employee_create', 'Thêm nhân viên mới'),
+('employee_read', 'Xem thông tin nhân viên'),
+('employee_update', 'Cập nhật thông tin nhân viên'),
+('employee_delete', 'Xóa nhân viên');
+
+-- Accounts permissions
+INSERT INTO permissions (name, description) VALUES
+('accounts_all', 'Toàn quyền quản lý tài khoản hệ thống'),
+('account_create', 'Thêm tài khoản mới'),
+('account_read', 'Xem thông tin tài khoản'),
+('account_update', 'Cập nhật tài khoản'),
+('account_delete', 'Xóa tài khoản');
+
+-- Roles & Permissions
+INSERT INTO permissions (name, description) VALUES
+('roles_all', 'Toàn quyền quản lý vai trò'),
+('role_create', 'Tạo vai trò mới'),
+('role_read', 'Xem vai trò'),
+('role_update', 'Cập nhật vai trò'),
+('role_delete', 'Xóa vai trò');
+
+-- Payroll & Salary permissions
+INSERT INTO permissions (name, description) VALUES
+('payrolls_all', 'Toàn quyền quản lý bảng lương'),
+('payroll_create', 'Tạo bảng lương mới'),
+('payroll_read', 'Xem bảng lương'),
+('payroll_update', 'Cập nhật bảng lương'),
+('payroll_delete', 'Xóa bảng lương');
+
+select * from permissions
+-- Role-Permissions
 CREATE TABLE role_permissions (
   role_id INT NOT NULL,
   permission_id INT NOT NULL,
@@ -90,8 +76,35 @@ CREATE TABLE role_permissions (
   FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 );
 
--- Accounts & Refresh Tokens
-CREATE TABLE Accounts (
+-- Admin (toàn quyền)
+INSERT INTO role_permissions (role_id, permission_id) VALUES
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10);
+INSERT INTO role_permissions (role_id, permission_id) VALUES
+(1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17), (1, 18), (1, 19), (1, 20);
+select * from permissions
+-- HR (quản lý Departments & Employees)
+INSERT INTO role_permissions (role_id, permission_id) VALUES
+(2, 1), -- departments_all
+(2, 2), -- department_create
+(2, 3), -- department_edit
+(2, 4), -- department_delete
+(2, 5), -- employees_all
+(2, 6), -- employee_create
+(2, 7), -- employee_edit
+(2, 8); -- employee_delete
+
+-- Accountant (quản lý Payroll)
+INSERT INTO role_permissions (role_id, permission_id) VALUES
+(3, 9),  -- payrolls_all
+(3, 10); -- payrolls_create
+
+-- Employee (chỉ xem thông tin cá nhân)
+INSERT INTO role_permissions (role_id, permission_id) VALUES
+(4, 5); -- employee_read
+
+
+-- Accounts
+CREATE TABLE accounts (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
@@ -101,16 +114,41 @@ CREATE TABLE Accounts (
   FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE RESTRICT
 );
 
+-- Thêm 5 tài khoản ví dụ
+INSERT INTO accounts (username, password, role_id) VALUES
+('admin_user', 'admin123', 1),       -- Admin
+('hr_user', 'hr123', 2),             -- HR
+('accountant_user', 'acc123', 3),    -- Accountant
+('employee1', 'emp123', 4),          -- Employee
+('employee2', 'emp456', 4);          -- Employee
+DELETE FROM accounts;
+SELECT 
+    r.name AS role_name,
+    p.name AS permission_name,
+    p.description AS permission_description
+FROM 
+    roles r
+JOIN 
+    role_permissions rp ON r.id = rp.role_id
+JOIN 
+    permissions p ON rp.permission_id = p.id
+WHERE 
+    r.id = 1;
+
+select * from accounts
+-- Refresh Tokens
 CREATE TABLE refresh_tokens (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  Account_id INT NOT NULL,
-  token VARCHAR(500) NOT NULL,
+  account_id INT NOT NULL,
+  token VARCHAR(1000) NOT NULL,
   expires_at DATETIME NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (Account_id) REFERENCES Accounts(id) ON DELETE CASCADE
+  FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
-
--- Departments & Positions
+ALTER TABLE refresh_tokens MODIFY token VARCHAR(1000) NOT NULL;
+DESC refresh_tokens;
+DESCRIBE refresh_tokens;
+-- Departments
 CREATE TABLE departments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -118,11 +156,31 @@ CREATE TABLE departments (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+-- Departments
+INSERT INTO departments (name) VALUES
+('Human Resources'),   -- id = 1
+('Finance'),           -- id = 2
+('IT');                -- id = 3
 
+
+-- Positions
 CREATE TABLE positions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   description VARCHAR(255)
+);
+-- Positions
+INSERT INTO positions (name, description) VALUES
+('HR Manager', 'Quản lý nhân sự'),       -- id = 1
+('HR Staff', 'Nhân viên nhân sự'),       -- id = 2
+('Accountant', 'Kế toán'),              -- id = 3
+('Developer', 'Lập trình viên'),        -- id = 4
+('Support', 'Nhân viên hỗ trợ');        -- id = 5
+
+-- Countries
+CREATE TABLE countries (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL
 );
 
 -- Employee Info
@@ -132,26 +190,35 @@ CREATE TABLE employee_information (
   email VARCHAR(100) UNIQUE,
   phone VARCHAR(20),
   department_id INT,
-  position_id INT,
+  position_id INT NULL,
   hire_date DATE,
-  Account_id INT,
+  account_id INT NULL,
+  avatar VARCHAR(255) NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (department_id) REFERENCES departments(id),
   FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE SET NULL ON UPDATE CASCADE,
-  FOREIGN KEY (Account_id) REFERENCES Accounts(id) ON DELETE SET NULL ON UPDATE CASCADE
+  FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
+-- Thêm thông tin nhân viên tương ứng trong employee_information
+INSERT INTO employee_information (full_name, email, phone, department_id, position_id, hire_date, account_id) VALUES
+('Nguyen Van A', 'a@example.com', '0900000001', 1, 1, '2025-01-10', 1),
+('Tran Thi B', 'b@example.com', '0900000002', 1, 2, '2025-02-15', 2),
+('Le Van C', 'c@example.com', '0900000003', 2, 3, '2025-03-20', 3),
+('Pham Thi D', 'd@example.com', '0900000004', 2, 4, '2025-04-05', 4),
+('Hoang Van E', 'e@example.com', '0900000005', 3, 5, '2025-05-01', 5);
 
+-- Cập nhật manager_id cho departments nếu cần
+UPDATE departments SET manager_id = 1 WHERE id = 1; -- HR Manager
+UPDATE departments SET manager_id = 3 WHERE id = 2; -- Finance Manager
+UPDATE departments SET manager_id = 4 WHERE id = 3; -- IT Manager
+
+-- Manager reference
 ALTER TABLE departments
   ADD CONSTRAINT fk_manager FOREIGN KEY (manager_id) REFERENCES employee_information(id)
   ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- Employee Private Info
-CREATE TABLE countries (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL
-);
-
 CREATE TABLE employee_private_information (
   id INT AUTO_INCREMENT PRIMARY KEY,
   employee_id INT NOT NULL,
@@ -167,116 +234,6 @@ CREATE TABLE employee_private_information (
   FOREIGN KEY (employee_id) REFERENCES employee_information(id),
   FOREIGN KEY (country_id) REFERENCES countries(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
--- Bảng loại nghỉ phép
-CREATE TABLE leave_types (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,           -- ví dụ: "Annual Leave", "Sick Leave"
-    description TEXT NULL,
-    default_days INT DEFAULT 0,           -- số ngày nghỉ mặc định/năm
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Bảng nghỉ phép của nhân viên
-CREATE TABLE leaves (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id INT NOT NULL,
-    leave_type_id INT NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    days_taken DECIMAL(5,2) DEFAULT 0,   -- số ngày nghỉ thực tế
-    reason TEXT NULL,                     -- lý do nghỉ
-    status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_leave_employee FOREIGN KEY (employee_id) REFERENCES employeeinformation(id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_leave_type FOREIGN KEY (leave_type_id) REFERENCES leave_types(id)
-        ON DELETE RESTRICT ON UPDATE CASCADE
-);
-
--- Bảng loại lương (salary_type)
-CREATE TABLE salary_types (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL, 
-    description TEXT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Bảng loại cấu trúc lương (salary_structure_type)
-CREATE TABLE salary_structure_types (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT NULL,
-    is_taxable BOOLEAN DEFAULT FALSE,
-    is_deduction BOOLEAN DEFAULT FALSE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-CREATE TABLE attendances (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id INT NOT NULL,
-    date DATE NOT NULL,
-    start_time TIME NULL,
-    start_status ENUM('NORMAL', 'FORGOT') DEFAULT 'NORMAL',
-    end_time TIME NULL,
-    end_status ENUM('NORMAL', 'FORGOT') DEFAULT 'NORMAL',
-    working_hours DECIMAL(5,2) DEFAULT 0, -- số giờ làm việc
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_attendance_employee FOREIGN KEY (employee_id) REFERENCES employee_information(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
--- Bảng công thức tính lương (calculation_rule)
-CREATE TABLE calculation_rules (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    salary_structure_type_id INT NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    formula TEXT NOT NULL,
-    condition TEXT NULL,   
-    priority INT DEFAULT 1,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_rule_structure_type FOREIGN KEY (salary_structure_type_id) REFERENCES salary_structure_types(id)
-);
-
--- Bảng cấu trúc lương (salary_structure)
-CREATE TABLE salary_structures (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    salary_structure_type_id INT NOT NULL,
-    salary_type_id INT NOT NULL,
-    value_type ENUM('Fixed','Percentage','Formula-based') NOT NULL,
-    value DECIMAL(15,2) NOT NULL,
-    effective_from DATE NOT NULL,
-    effective_to DATE NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_structure_type FOREIGN KEY (salary_structure_type_id) REFERENCES salary_structure_types(id),
-    CONSTRAINT fk_structure_salarytype FOREIGN KEY (salary_type_id) REFERENCES salary_types(id)
-);
-
--- Bảng payroll (bảng lương cho từng nhân viên)
-CREATE TABLE payrolls (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_id INT NOT NULL,
-    period VARCHAR(7) NOT NULL,  -- format YYYY-MM
-    base_salary DECIMAL(15,2) NOT NULL,
-    total_allowance DECIMAL(15,2) DEFAULT 0,
-    total_overtime DECIMAL(15,2) DEFAULT 0,
-    total_deduction DECIMAL(15,2) DEFAULT 0,
-    gross_salary DECIMAL(15,2) NOT NULL,
-    net_salary DECIMAL(15,2) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('Pending','Paid','Cancelled') DEFAULT 'Pending',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_payroll_employee FOREIGN KEY (employee_id) REFERENCES employee_information(id)
-);
 
 -- Employee Bank Accounts
 CREATE TABLE employee_bank_accounts (
@@ -291,66 +248,290 @@ CREATE TABLE employee_bank_accounts (
   FOREIGN KEY (employee_id) REFERENCES employee_information(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- Data mẫu
-INSERT INTO roles (name, description) VALUES
-('admin', 'Quản trị hệ thống, toàn quyền'),
-('hr_manager', 'Quản lý nhân sự'),
-('payroll_accountant', 'Kế toán lương'),
-('manager', 'Trưởng phòng / Quản lý'),
-('employee', 'Nhân viên');
+-- Work shifts
+CREATE TABLE work_shifts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    total_hours DECIMAL(5,2) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+INSERT INTO work_shifts (name, start_time, end_time, total_hours) VALUES
+('Shift 1', '08:00:00', '17:00:00', 8.00),
+('Shift 2', '09:00:00', '18:00:00', 8.00),
+('Shift 3', '22:00:00', '06:00:00', 8.00);  -- ca đêm
 
-INSERT INTO permissions (name, description) VALUES
-('create_Account', 'Tạo nhân viên mới'),
-('view_Account', 'Xem thông tin nhân viên'),
-('update_Account', 'Cập nhật thông tin nhân viên'),
-('delete_Account', 'Xóa nhân viên');
+-- Overtime rules
+CREATE TABLE overtime_rules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    multiplier DECIMAL(5,2) NOT NULL,
+    start_hour TIME NOT NULL,
+    end_hour TIME NOT NULL,
+    description TEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-(3,1),(3,2);
+-- Overtime Rules (quy định tăng ca)
+INSERT INTO overtime_rules (name, multiplier, start_hour, end_hour, description) VALUES
+('Overtime Weekdays', 1.5, '17:00:00', '21:00:00', 'Tăng ca trong ngày thường 1.5x'),
+('Overtime Weekends', 2.0, '08:00:00', '20:00:00', 'Tăng ca cuối tuần 2x'),
+('Overtime Night', 2.0, '22:00:00', '06:00:00', 'Tăng ca ban đêm 2x');
 
-INSERT INTO Accounts (username, password, role_id) VALUES
-('admin', '123456', 1);
 
-INSERT INTO departments (name) VALUES
-('HR'),('Development'),('Finance'),('Sales');
 
-INSERT INTO positions (name, description) VALUES
-('HR Manager','Quản lý nhân sự'),
-('Developer','Lập trình viên'),
-('Accountant','Nhân viên kế toán'),
-('Sales Executive','Nhân viên kinh doanh');
+CREATE TABLE special_leave_rules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    days_allocated DECIMAL(5,2) DEFAULT 0,
+    description TEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+INSERT INTO special_leave_rules (name, days_allocated, description) VALUES
+('Sick Leave', 10, 'Số ngày nghỉ bệnh trong năm'),
+('Maternity Leave', 90, 'Nghỉ thai sản cho nhân viên nữ'),
+('Paternity Leave', 10, 'Nghỉ thai sản cho nhân viên nam'),
+('Personal Leave', 5, 'Nghỉ việc riêng theo quy định công ty');
 
-INSERT INTO countries (name) VALUES
-('Vietnam'),('USA'),('Japan'),('Germany');
+-- Leave types
+CREATE TABLE leave_types (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    default_days INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+INSERT INTO leave_types (name, description, default_days) VALUES
+('Annual Leave', 'Nghỉ hàng năm', 12),
+('Sick Leave', 'Nghỉ bệnh', 10),
+('Maternity Leave', 'Nghỉ thai sản', 90),
+('Paternity Leave', 'Nghỉ thai sản cho nam', 10),
+('Personal Leave', 'Nghỉ việc riêng', 5);
 
-INSERT INTO employee_information (full_name, email, phone, department_id, position_id, hire_date, Account_id) VALUES
-('Nguyen Van A', 'nguyenvana6455@example.com', '0901234567', 2, 2, '2023-01-15', 1),
-('Tran Thi B', 'tranthib5@example.com', '0902345678', 1, 1, '2022-05-20', NULL),
-('Le Van C', 'levanc5@example.com', '0903456789', 3, 3, '2021-09-10', NULL),
-('Pham Thi D', 'pham5thid@example.com', '0904567890', 4, 4, '2020-07-05', NULL);
+-- Leaves
+CREATE TABLE leaves (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    leave_type_id INT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    days_taken DECIMAL(5,2) DEFAULT 0,
+    reason TEXT NULL,
+    status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employee_information(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (leave_type_id) REFERENCES leave_types(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+INSERT INTO leaves (employee_id, leave_type_id, start_date, end_date, days_taken, reason, status) VALUES
+(1, 1, '2025-07-01', '2025-07-05', 5, 'Đi du lịch', 'Approved'),
+(2, 2, '2025-07-10', '2025-07-12', 3, 'Bị ốm', 'Approved'),
+(3, 3, '2025-06-01', '2025-08-30', 90, 'Thai sản', 'Approved'),
+(4, 4, '2025-07-15', '2025-07-24', 10, 'Thai sản', 'Pending'),
+(5, 5, '2025-07-20', '2025-07-22', 3, 'Việc riêng', 'Rejected');
+-- Salary types
+CREATE TABLE salary_types (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL, 
+    description TEXT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
-INSERT INTO employee_private_information (employee_id, date_of_birth, gender, national_id, email_private, phone_private, country_id, address) VALUES
-(1,'1990-05-12','Male','123456789','nguyenvana.private@example.com','0912345678',1,'123 Le Loi, Hanoi'),
-(2,'1992-08-21','Female','987654321','tranthib.private@example.com','0923456789',1,'456 Tran Hung Dao, HCMC'),
-(3,'1988-03-15','Male','555666777','levanc.private@example.com','0934567890',1,'789 Nguyen Trai, Da Nang'),
-(4,'1993-11-30','Female','111222333','phamthid.private@example.com','0945678901',1,'321 Hai Ba Trung, Hanoi');
+-- Salary structure types
+CREATE TABLE salary_structure_types (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    is_taxable BOOLEAN DEFAULT FALSE,
+    is_deduction BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
-INSERT INTO employee_bank_accounts (employee_id, bank_name, account_number, owner, account_type) VALUES
-(1,'Vietcombank','0123456789','Nguyen Van A','Savings'),
-(2,'Techcombank','9876543210','Tran Thi B','Checking'),
-(3,'BIDV','555666777','Le Van C','Savings'),
-(4,'ACB','111222333','Pham Thi D','Checking');
+-- Salary structures
+CREATE TABLE salary_structures (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    salary_structure_type_id INT NOT NULL,
+    salary_type_id INT NOT NULL,
+    value_type ENUM('Fixed','Percentage','Formula-based') NOT NULL,
+    value DECIMAL(15,2) NOT NULL,
+    effective_from DATE NOT NULL,
+    effective_to DATE NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (salary_structure_type_id) REFERENCES salary_structure_types(id),
+    FOREIGN KEY (salary_type_id) REFERENCES salary_types(id)
+);
 
--- Truy vấn test
-SELECT u.id, u.username, r.name AS role
-FROM Accounts u
-JOIN roles r ON u.role_id = r.id;
+-- Employee salary history
+CREATE TABLE employee_salary_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    salary_structure_id INT NOT NULL,
+    salary_amount DECIMAL(15,2) NOT NULL,
+    effective_from DATE NOT NULL,
+    effective_to DATE NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employee_information(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (salary_structure_id) REFERENCES salary_structures(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
-SELECT e.id, e.full_name, e.email, d.name AS department, p.name AS position,
-       ep.date_of_birth, ep.gender, c.name AS country, eb.bank_name, eb.account_number
-FROM employee_information e
-LEFT JOIN departments d ON e.department_id = d.id
-LEFT JOIN positions p ON e.position_id = p.id
-LEFT JOIN employee_private_information ep ON e.id = ep.employee_id
-LEFT JOIN countries c ON ep.country_id = c.id
-LEFT JOIN employee_bank_accounts eb ON e.id = eb.employee_id;
+-- Employee Position History
+CREATE TABLE employee_position_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    position_id INT NULL,
+    department_id INT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employee_information(id) 
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (position_id) REFERENCES positions(id) 
+        ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (department_id) REFERENCES departments(id) 
+        ON DELETE SET NULL ON UPDATE CASCADE
+);         
+
+-- Attendances (tổng hợp theo ngày)
+CREATE TABLE attendances (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    date DATE NOT NULL,
+    start_time DATETIME NULL,
+    start_status ENUM('NORMAL', 'FORGOT') DEFAULT 'NORMAL',
+    end_time DATETIME NULL,
+    end_status ENUM('NORMAL', 'FORGOT') DEFAULT 'NORMAL',
+    working_hours DECIMAL(5,2) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employee_information(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- Attendance Logs (chi tiết từng lần điểm danh)
+CREATE TABLE attendance_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    log_time DATETIME NOT NULL,
+    action ENUM('CHECKIN', 'CHECKOUT') NOT NULL,
+    source ENUM('DEVICE','FACE_RECOGNITION','MANUAL') DEFAULT 'FACE_RECOGNITION',
+    status ENUM('SUCCESS','FAILED') DEFAULT 'SUCCESS',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employee_information(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- Calculation Rules
+CREATE TABLE calculation_rules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    salary_structure_type_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    formula TEXT NOT NULL,
+    rule_condition TEXT NULL,
+    priority INT DEFAULT 1,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (salary_structure_type_id) REFERENCES salary_structure_types(id)
+);
+
+-- Payrolls
+CREATE TABLE payrolls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id INT NOT NULL,
+    period VARCHAR(7) NOT NULL,
+    base_salary DECIMAL(15,2) NOT NULL,
+    total_allowance DECIMAL(15,2) DEFAULT 0,
+    total_overtime DECIMAL(15,2) DEFAULT 0,
+    total_deduction DECIMAL(15,2) DEFAULT 0,
+    gross_salary DECIMAL(15,2) NOT NULL,
+    net_salary DECIMAL(15,2) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('Pending','Paid','Cancelled') DEFAULT 'Pending',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employee_information(id)
+);
+
+-- Salary Types (loại lương)
+INSERT INTO salary_types (name, description, is_active) VALUES
+('Basic Salary', 'Lương cơ bản', TRUE),
+('Housing Allowance', 'Trợ cấp nhà ở', TRUE),
+('Transport Allowance', 'Trợ cấp đi lại', TRUE),
+('Overtime Pay', 'Tiền làm thêm giờ', TRUE),
+('Bonus', 'Thưởng', TRUE);
+
+-- Salary Structure Types (cấu trúc lương)
+INSERT INTO salary_structure_types (name, description, is_taxable, is_deduction) VALUES
+('Fixed Salary', 'Lương cố định hàng tháng', TRUE, FALSE),
+('Allowance', 'Các khoản trợ cấp', TRUE, FALSE),
+('Overtime', 'Lương làm thêm giờ', TRUE, FALSE),
+('Bonus', 'Thưởng định kỳ', TRUE, FALSE),
+('Deduction', 'Các khoản khấu trừ', FALSE, TRUE);
+
+-- Salary Structures (công thức lương cụ thể)
+-- Giả sử salary_type_id từ 1-5, salary_structure_type_id từ 1-5
+INSERT INTO salary_structures (salary_structure_type_id, salary_type_id, value_type, value, effective_from) VALUES
+(1, 1, 'Fixed', 10000000, '2025-01-01'),
+(2, 2, 'Fixed', 2000000, '2025-01-01'),
+(2, 3, 'Fixed', 1000000, '2025-01-01'),
+(3, 4, 'Percentage', 150, '2025-01-01'),
+(4, 5, 'Fixed', 3000000, '2025-01-01');
+
+-- Employee Salary History (lịch sử lương nhân viên)
+-- Giả sử employee_id từ 1-5, salary_structure_id từ 1-5
+INSERT INTO employee_salary_history (employee_id, salary_structure_id, salary_amount, effective_from) VALUES
+(1, 1, 10000000, '2025-01-01'),
+(1, 2, 2000000, '2025-01-01'),
+(2, 1, 12000000, '2025-01-01'),
+(3, 1, 9000000, '2025-01-01'),
+(4, 1, 11000000, '2025-01-01'),
+(5, 1, 9500000, '2025-01-01');
+
+-- Employee Position History
+INSERT INTO employee_position_history (employee_id, position_id, department_id, start_date) VALUES
+(1, 1, 1, '2024-01-01'),
+(2, 2, 1, '2024-02-01'),
+(3, 3, 2, '2024-03-01'),
+(4, 4, 2, '2024-04-01'),
+(5, 5, 3, '2024-05-01');
+
+-- Attendances (ví dụ tổng hợp)
+INSERT INTO attendances (employee_id, date, start_time, end_time, working_hours) VALUES
+(1, '2025-10-01', '2025-10-01 08:00:00', '2025-10-01 17:00:00', 8),
+(2, '2025-10-01', '2025-10-01 08:30:00', '2025-10-01 17:00:00', 7.5),
+(3, '2025-10-01', '2025-10-01 09:00:00', '2025-10-01 17:00:00', 7),
+(4, '2025-10-01', '2025-10-01 08:00:00', '2025-10-01 16:30:00', 7),
+(5, '2025-10-01', '2025-10-01 08:15:00', '2025-10-01 17:00:00', 7.75);
+
+-- Attendance Logs (chi tiết check-in/out)
+INSERT INTO attendance_logs (employee_id, log_time, action) VALUES
+(1, '2025-10-01 08:00:00', 'CHECKIN'),
+(1, '2025-10-01 17:00:00', 'CHECKOUT'),
+(2, '2025-10-01 08:30:00', 'CHECKIN'),
+(2, '2025-10-01 17:00:00', 'CHECKOUT'),
+(3, '2025-10-01 09:00:00', 'CHECKIN'),
+(3, '2025-10-01 17:00:00', 'CHECKOUT'),
+(4, '2025-10-01 08:00:00', 'CHECKIN'),
+(4, '2025-10-01 16:30:00', 'CHECKOUT'),
+(5, '2025-10-01 08:15:00', 'CHECKIN'),
+(5, '2025-10-01 17:00:00', 'CHECKOUT');
+
+-- Calculation Rules (ví dụ)
+INSERT INTO calculation_rules (salary_structure_type_id, name, formula) VALUES
+(1, 'Base Salary', 'base_salary'),
+(2, 'Allowance Total', 'housing_allowance + transport_allowance'),
+(3, 'Overtime Pay', 'base_salary * overtime_percentage / 100'),
+(4, 'Bonus', 'bonus_amount');
+

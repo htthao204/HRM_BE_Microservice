@@ -1,8 +1,16 @@
+<<<<<<< HEAD
 import { Model } from 'sequelize';
 
 import { DepartmentRequest } from '../dto/request/departmentRequest';
 import { Department } from '../models/departmentModel';
 import { EmployeeInformation } from '../models/employeeModel'; // 👈 import thêm
+=======
+import { DepartmentRequest } from "../dto/request/departmentRequest";
+import { DepartmentSearchDTO } from "../dto/search/DepartmentSearchDTO";
+import { filterDepartments } from "../filter/DepartmentFilter";
+import { Department } from "../models/departmentModel";
+import { Model } from "sequelize";
+>>>>>>> e4dd479 (update backend)
 
 interface PaginatedResult<T> {
   totalItems: number;
@@ -87,5 +95,52 @@ export const getDepartmentById = async (id: number) => {
   } catch (err) {
     console.error(err);
     throw new Error("Lấy phòng ban thất bại");
+  }
+};
+export const getDepartmentByManagerId = async (managerId: number) => {
+  try {
+    const departments = await Department.findAll({
+      where: { managerId },
+      order: [["created_at", "DESC"]],
+    });
+
+    return departments.map((dept) => dept.get({ plain: true }));
+  } catch (err: any) {
+    console.error(err);
+    throw new Error("Lấy phòng ban theo managerId thất bại");
+  }
+};
+export const getAllDepartmentFilter = async (
+  page: number = 1,
+  pageSize: number = 10,
+  dto?: DepartmentSearchDTO
+): Promise<PaginatedResult<Model>> => {
+  try {
+    const offset = (page - 1) * pageSize;
+
+    if (dto) {
+      const result = await filterDepartments(dto, page, pageSize);
+      return {
+        totalItems: result.count,
+        totalPages: Math.ceil(result.count / pageSize),
+        currentPage: page,
+        data: result.rows,
+      };
+    } else {
+      const result = await Department.findAndCountAll({
+        limit: pageSize,
+        offset,
+        order: [["created_at", "DESC"]],
+      });
+      return {
+        totalItems: result.count,
+        totalPages: Math.ceil(result.count / pageSize),
+        currentPage: page,
+        data: result.rows,
+      };
+    }
+  } catch (error: any) {
+    console.error(error);
+    throw new Error("Lấy danh sách phòng ban thất bại");
   }
 };

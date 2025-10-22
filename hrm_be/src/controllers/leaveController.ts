@@ -7,6 +7,10 @@ import {
   updateLeave,
   deleteLeave,
   getLeavesPaginated,
+  getLeavesByLeaveType,
+  getLeavesByEmployeeId,
+  getLeavesByDateRange,
+  getLeavesByFilter,
 } from "../services/leaveService";
 import { ResultResponse } from "../dto/response/resultResponse";
 
@@ -114,6 +118,79 @@ export const deleteLeaveController = async (
         .json(ResultResponse(false, 404, "Không tìm thấy đơn xin nghỉ"));
     }
     res.status(200).json(ResultResponse(true, 200, null, null, null));
+  } catch (err: any) {
+    next(err);
+  }
+};
+// Lấy đơn nghỉ theo employeeId
+export const getLeavesByEmployeeIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const employeeId = Number(req.params.employeeId);
+    const leaves = await getLeavesByEmployeeId(employeeId);
+    res.status(200).json(ResultResponse(true, 200, null, null, leaves));
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+// Lấy đơn nghỉ theo leaveTypeId
+export const getLeavesByLeaveTypeController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const leaveTypeId = Number(req.params.leaveTypeId);
+    const leaves = await getLeavesByLeaveType(leaveTypeId);
+    res.status(200).json(ResultResponse(true, 200, null, null, leaves));
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+// Lấy đơn nghỉ theo khoảng thời gian
+export const getLeavesByDateRangeController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const startDate = new Date(req.query.startDate as string);
+    const endDate = new Date(req.query.endDate as string);
+    const leaves = await getLeavesByDateRange(startDate, endDate);
+    res.status(200).json(ResultResponse(true, 200, null, null, leaves));
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+// Lấy đơn nghỉ theo nhiều filter (employeeId, leaveTypeId, startDate, endDate)
+export const getLeavesByFilterController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const filter = {
+      employeeId: req.query.employeeId
+        ? Number(req.query.employeeId)
+        : undefined,
+      leaveTypeId: req.query.leaveTypeId
+        ? Number(req.query.leaveTypeId)
+        : undefined,
+      startDate: req.query.startDate
+        ? new Date(req.query.startDate as string)
+        : undefined,
+      endDate: req.query.endDate
+        ? new Date(req.query.endDate as string)
+        : undefined,
+    };
+    const leaves = await getLeavesByFilter(filter);
+    res.status(200).json(ResultResponse(true, 200, null, null, leaves));
   } catch (err: any) {
     next(err);
   }
