@@ -21,9 +21,7 @@ interface CreateEmployeeInput {
   avatar?: string;
 }
 
-// ==============================
 // Lấy danh sách nhân viên phân trang
-// ==============================
 export const getAllEmployeeInfor = async (
   page: number = 1,
   pageSize: number = 10
@@ -32,7 +30,6 @@ export const getAllEmployeeInfor = async (
     const offset = (page - 1) * pageSize;
 
     const { count, rows } = await EmployeeInformation.findAndCountAll({
-      where: { isDelete: false },
       include: [
         { model: EmployeePrivateInformation, as: "privateInfo" },
         { model: EmployeeBankAccount, as: "bankAccounts" },
@@ -54,15 +51,11 @@ export const getAllEmployeeInfor = async (
   }
 };
 
-// ==============================
 // Tạo nhân viên
-// ==============================
 export const createEmployee = async (employee: CreateEmployeeInput) => {
   try {
-    // Gán isDelete ở đây
     const newEmployee = await EmployeeInformation.create({
       ...employee,
-      isDelete: false,
     });
 
     return newEmployee.get({ plain: true });
@@ -71,6 +64,7 @@ export const createEmployee = async (employee: CreateEmployeeInput) => {
     throw new Error("Tạo nhân viên thất bại");
   }
 };
+
 // ==============================
 // Cập nhật nhân viên
 // ==============================
@@ -80,7 +74,7 @@ export const updateEmployee = async (
 ) => {
   try {
     const [affectedRows] = await EmployeeInformation.update(employee, {
-      where: { id, isDelete: false },
+      where: { id },
     });
     return affectedRows;
   } catch (error: any) {
@@ -130,16 +124,12 @@ export const getEmployeeByDepartmentId = async (
   }
 };
 
-// ==============================
-// Xóa nhân viên (soft delete)
-// ==============================
 export const deleteEmployee = async (id: number) => {
   try {
-    const [affectedRows] = await EmployeeInformation.update(
-      { isDelete: true },
-      { where: { id, isDelete: false } }
-    );
-    return affectedRows;
+    const employee = await EmployeeInformation.findByPk(id);
+    if (!employee) return 0;
+    await employee.destroy(); // sẽ soft delete, tự cập nhật deleted_at
+    return 1;
   } catch (error: any) {
     console.error(error);
     throw new Error("Xóa nhân viên thất bại");

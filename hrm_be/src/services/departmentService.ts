@@ -1,16 +1,9 @@
-<<<<<<< HEAD
-import { Model } from 'sequelize';
-
-import { DepartmentRequest } from '../dto/request/departmentRequest';
-import { Department } from '../models/departmentModel';
-import { EmployeeInformation } from '../models/employeeModel'; // 👈 import thêm
-=======
 import { DepartmentRequest } from "../dto/request/departmentRequest";
 import { DepartmentSearchDTO } from "../dto/search/DepartmentSearchDTO";
 import { filterDepartments } from "../filter/DepartmentFilter";
+import { EmployeeInformation } from "../models";
 import { Department } from "../models/departmentModel";
 import { Model } from "sequelize";
->>>>>>> e4dd479 (update backend)
 
 interface PaginatedResult<T> {
   totalItems: number;
@@ -34,7 +27,7 @@ export const getAllDepartment = async (
         {
           model: EmployeeInformation,
           as: "manager",
-          attributes: ["id", "fullName", "email"], 
+          attributes: ["id", "fullName", "email"],
         },
       ],
     });

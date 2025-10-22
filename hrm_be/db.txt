@@ -182,6 +182,17 @@ CREATE TABLE countries (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL
 );
+INSERT INTO countries (name) VALUES
+('Vietnam'),
+('United States'),
+('United Kingdom'),
+('France'),
+('Germany'),
+('Japan'),
+('China'),
+('India'),
+('Australia'),
+('Canada');
 
 -- Employee Info
 CREATE TABLE employee_information (
@@ -196,10 +207,14 @@ CREATE TABLE employee_information (
   avatar VARCHAR(255) NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME DEFAULT NULL, 
   FOREIGN KEY (department_id) REFERENCES departments(id),
   FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE SET NULL ON UPDATE CASCADE,
   FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
+
+
+drop table employee_information
 -- Thêm thông tin nhân viên tương ứng trong employee_information
 INSERT INTO employee_information (full_name, email, phone, department_id, position_id, hire_date, account_id) VALUES
 ('Nguyen Van A', 'a@example.com', '0900000001', 1, 1, '2025-01-10', 1),
@@ -234,6 +249,17 @@ CREATE TABLE employee_private_information (
   FOREIGN KEY (employee_id) REFERENCES employee_information(id),
   FOREIGN KEY (country_id) REFERENCES countries(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
+INSERT INTO employee_private_information
+(employee_id, date_of_birth, gender, national_id, email_private, phone_private, country_id, address, created_at, updated_at)
+VALUES
+(1, '1990-05-15', 'Male', '123456789', 'john.private@example.com', '0909123456', 1, '123 Nguyễn Trãi, Hà Nội', NOW(), NOW()),
+(2, '1992-08-20', 'Female', '987654321', 'anna.private@example.com', '0912345678', 2, '456 Lê Lợi, TP HCM', NOW(), NOW()),
+(3, '1985-12-30', 'Other', '555666777', 'chris.private@example.com', '0923456789', 3, '789 Trần Phú, Đà Nẵng', NOW(), NOW()),
+(4, '1995-07-10', 'Male', '112233445', 'mark.private@example.com', '0934567890', 1, '321 Hai Bà Trưng, Hà Nội', NOW(), NOW()),
+(5, '1993-03-25', 'Female', '667788990', 'lisa.private@example.com', '0945678901', 2, '654 Nguyễn Huệ, TP HCM', NOW(), NOW());
+SELECT * FROM employee_private_information
+select * from countries
+SELECT * FROM employee_private_information WHERE employee_id = 1;
 
 -- Employee Bank Accounts
 CREATE TABLE employee_bank_accounts (
@@ -407,18 +433,16 @@ CREATE TABLE attendances (
     id INT AUTO_INCREMENT PRIMARY KEY,
     employee_id INT NOT NULL,
     date DATE NOT NULL,
-    start_time DATETIME NULL,
-    start_status ENUM('NORMAL', 'FORGOT') DEFAULT 'NORMAL',
-    end_time DATETIME NULL,
-    end_status ENUM('NORMAL', 'FORGOT') DEFAULT 'NORMAL',
     working_hours DECIMAL(5,2) DEFAULT 0,
+    total_checkin INT DEFAULT 0,        -- số lần check-in
+    total_checkout INT DEFAULT 0,       -- số lần check-out
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES employee_information(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
-
+drop table attendances
 -- Attendance Logs (chi tiết từng lần điểm danh)
 CREATE TABLE attendance_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,

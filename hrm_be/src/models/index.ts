@@ -52,8 +52,10 @@ EmployeeInformation.hasOne(EmployeePrivateInformation, {
   foreignKey: "employee_id",
   as: "privateInfo",
 });
+
 EmployeePrivateInformation.belongsTo(EmployeeInformation, {
   foreignKey: "employee_id",
+  as: "employee",
 });
 
 // EmployeePrivateInfo ↔ Country (N-1)
