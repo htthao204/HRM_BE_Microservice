@@ -5,6 +5,7 @@ import { authorize } from "../middlewares/authorizeMiddleware";
 import {
   deleteAccountController,
   getAllAccountsController,
+  getMe,
 } from "../controllers/accountController";
 
 const accountRouters = Router();
@@ -16,5 +17,5 @@ accountRouters.get(
   getAllAccountsController
 );
 accountRouters.delete("/:id", authentication, deleteAccountController);
-
+accountRouters.get("/me", authentication, getMe);
 export default accountRouters;

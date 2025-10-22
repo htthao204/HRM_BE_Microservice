@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ResultResponse } from "../dto/response/resultResponse";
 import { deleteAccount, getAllAccounts } from "../services/accountService";
+import { decodeToken } from "./auth/decodeToken";
 
 // Lấy danh sách tất cả Account
 export const getAllAccountsController = async (
@@ -44,5 +45,19 @@ export const deleteAccountController = async (
     );
   } catch (err: any) {
     next(err);
+  }
+};
+export const getMe = (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Token missing or invalid" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const user = decodeToken(token);
+    return res.json({ success: true, user });
+  } catch (error: any) {
+    return res.status(401).json({ message: error.message });
   }
 };
