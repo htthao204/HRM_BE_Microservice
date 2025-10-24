@@ -21,15 +21,8 @@ leaveRouter.post("/", authentication, createLeaveController);
 
 // Lấy tất cả đơn nghỉ
 leaveRouter.get("/", authentication, getAllLeavesController);
-
-// Lấy đơn nghỉ theo ID
-leaveRouter.get("/:id", authentication, getLeaveByIdController);
-
-// Cập nhật đơn nghỉ
-leaveRouter.put("/:id", authentication, updateLeaveController);
-
-// Xóa đơn nghỉ
-leaveRouter.delete("/:id", authentication, deleteLeaveController);
+// Lấy đơn nghỉ theo filter tổng hợp (employeeId, leaveTypeId, startDate, endDate)
+leaveRouter.get("/filter", authentication, getLeavesByFilterController);
 
 // Lấy đơn nghỉ theo employeeId
 leaveRouter.get(
@@ -48,7 +41,13 @@ leaveRouter.get(
 // Lấy đơn nghỉ theo khoảng ngày
 leaveRouter.get("/daterange", authentication, getLeavesByDateRangeController);
 
-// Lấy đơn nghỉ theo filter tổng hợp (employeeId, leaveTypeId, startDate, endDate)
-leaveRouter.get("/filter", authentication, getLeavesByFilterController);
+// Lấy đơn nghỉ theo ID
+leaveRouter.get("/:id", authentication, getLeaveByIdController);
+
+// Cập nhật đơn nghỉ
+leaveRouter.put("/:id", authentication, updateLeaveController);
+
+// Xóa đơn nghỉ
+leaveRouter.delete("/:id", authentication, deleteLeaveController);
 
 export default leaveRouter;

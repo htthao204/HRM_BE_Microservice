@@ -13,6 +13,7 @@ import {
   getLeavesByFilter,
 } from "../services/leaveService";
 import { ResultResponse } from "../dto/response/resultResponse";
+import { LeaveSearchDTO } from "../dto/search/LeaveSearchDTO";
 
 // Tạo mới đơn xin nghỉ
 export const createLeaveController = async (
@@ -175,21 +176,40 @@ export const getLeavesByFilterController = async (
   next: NextFunction
 ) => {
   try {
-    const filter = {
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 10;
+
+    const filter: LeaveSearchDTO = {
       employeeId: req.query.employeeId
         ? Number(req.query.employeeId)
+        : undefined,
+      employeeName: req.query.employeeName
+        ? String(req.query.employeeName)
         : undefined,
       leaveTypeId: req.query.leaveTypeId
         ? Number(req.query.leaveTypeId)
         : undefined,
-      startDate: req.query.startDate
-        ? new Date(req.query.startDate as string)
+      leaveTypeName: req.query.leaveTypeName
+        ? String(req.query.leaveTypeName)
         : undefined,
-      endDate: req.query.endDate
-        ? new Date(req.query.endDate as string)
+      reason: req.query.reason ? String(req.query.reason) : undefined,
+      status: req.query.status
+        ? (String(req.query.status) as "Pending" | "Approved" | "Rejected")
         : undefined,
+      startDateFrom: req.query.startDateFrom
+        ? String(req.query.startDateFrom)
+        : undefined,
+      startDateTo: req.query.startDateTo
+        ? String(req.query.startDateTo)
+        : undefined,
+      endDateFrom: req.query.endDateFrom
+        ? String(req.query.endDateFrom)
+        : undefined,
+      endDateTo: req.query.endDateTo ? String(req.query.endDateTo) : undefined,
     };
-    const leaves = await getLeavesByFilter(filter);
+
+    const leaves = await getLeavesByFilter(page, pageSize, filter);
+
     res.status(200).json(ResultResponse(true, 200, null, null, leaves));
   } catch (err: any) {
     next(err);

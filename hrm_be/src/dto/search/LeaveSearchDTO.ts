@@ -1,7 +1,9 @@
 export interface LeaveSearchDTO {
-  employeeId?: string;
+  employeeId?: number;
   employeeName?: string;
-  leaveType?: string;
+  leaveTypeId?: number;
+  leaveTypeName?: string;
+  reason?: string;
   status?: "Pending" | "Approved" | "Rejected";
   startDateFrom?: string;
   startDateTo?: string;

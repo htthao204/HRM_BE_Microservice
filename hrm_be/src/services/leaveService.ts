@@ -163,27 +163,56 @@ export const getLeavesByFilter = async (
   dto?: LeaveSearchDTO
 ) => {
   try {
+    console.log("Page:", page, "PageSize:", pageSize);
+    console.log("DTO received:", dto);
+
     const offset = (page - 1) * pageSize;
     const where: any = {};
 
     if (dto) {
-      if (dto.employeeId) where.employeeId = dto.employeeId;
-      if (dto.status) where.status = dto.status;
+      if (dto.employeeId) {
+        where.employeeId = dto.employeeId;
+        console.log("Filter employeeId:", where.employeeId);
+      }
+      if (dto.status) {
+        where.status = dto.status;
+        console.log("Filter status:", where.status);
+      }
 
       if (dto.startDateFrom || dto.startDateTo) {
         where.startDate = {};
-        if (dto.startDateFrom) where.startDate[Op.gte] = dto.startDateFrom;
-        if (dto.startDateTo) where.startDate[Op.lte] = dto.startDateTo;
+        if (dto.startDateFrom) {
+          where.startDate[Op.gte] = dto.startDateFrom;
+          console.log("Filter startDate >= ", dto.startDateFrom);
+        }
+        if (dto.startDateTo) {
+          where.startDate[Op.lte] = dto.startDateTo;
+          console.log("Filter startDate <= ", dto.startDateTo);
+        }
       }
 
       if (dto.endDateFrom || dto.endDateTo) {
         where.endDate = {};
-        if (dto.endDateFrom) where.endDate[Op.gte] = dto.endDateFrom;
-        if (dto.endDateTo) where.endDate[Op.lte] = dto.endDateTo;
+        if (dto.endDateFrom) {
+          where.endDate[Op.gte] = dto.endDateFrom;
+          console.log("Filter endDate >= ", dto.endDateFrom);
+        }
+        if (dto.endDateTo) {
+          where.endDate[Op.lte] = dto.endDateTo;
+          console.log("Filter endDate <= ", dto.endDateTo);
+        }
       }
     }
 
-    const include: any[] = [
+    console.log("Where clause:", JSON.stringify(where, null, 2));
+
+    // Filter leaveTypeId trực tiếp trong bảng Leave
+    if (dto?.leaveTypeId) {
+      where.leaveTypeId = dto.leaveTypeId;
+    }
+
+    // Phần include LeaveType không cần where nữa
+    const include = [
       {
         model: EmployeeInformation,
         as: "employee",
@@ -195,12 +224,12 @@ export const getLeavesByFilter = async (
       {
         model: LeaveType,
         as: "leaveType",
-        where: dto?.leaveType
-          ? { name: { [Op.iLike]: `%${dto.leaveType.trim()}%` } }
-          : undefined,
-        required: !!dto?.leaveType,
+        required: true,
+        // Không có where ở đây
       },
     ];
+
+    console.log("Include clause:", JSON.stringify(include, null, 2));
 
     const result = await Leave.findAndCountAll({
       where,
@@ -210,14 +239,42 @@ export const getLeavesByFilter = async (
       order: [["startDate", "ASC"]],
     });
 
+    console.log("Query result count:", result.count);
+    console.log("Query result rows:", result.rows.length);
+
+    // Chuyển đổi sequelize instance thành plain object và loại bỏ trường snake_case dư thừa
+    const cleanedData = result.rows.map((row) => {
+      const obj = row.toJSON() as any; // chuyển sequelize instance thành plain object
+
+      // Bây giờ obj có trường employee_id, leave_type_id bạn có thể xóa
+      delete obj.employee_id;
+      delete obj.leave_type_id;
+
+      if (obj.employee) {
+        delete obj.employee.created_at;
+        delete obj.employee.updated_at;
+        delete obj.employee.deleted_at;
+        delete obj.employee.department_id;
+        delete obj.employee.position_id;
+        delete obj.employee.account_id;
+      }
+
+      if (obj.leaveType) {
+        delete obj.leaveType.createdAt;
+        delete obj.leaveType.updatedAt;
+      }
+
+      return obj;
+    });
+
     return {
       totalItems: result.count,
       totalPages: Math.ceil(result.count / pageSize),
       currentPage: page,
-      data: result.rows,
+      data: cleanedData,
     };
   } catch (err: any) {
-    console.error(err);
+    console.error("Error in getLeavesByFilter:", err);
     throw new Error("Lấy đơn nghỉ theo filter thất bại");
   }
 };
