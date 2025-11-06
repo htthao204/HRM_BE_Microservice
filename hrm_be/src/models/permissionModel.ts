@@ -5,10 +5,12 @@ interface PermissionAttributes {
   id: number;
   name: string;
   description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 interface PermissionCreationAttributes
-  extends Optional<PermissionAttributes, "id"> {}
+  extends Optional<PermissionAttributes, "id" | "createdAt" | "updatedAt"> {}
 
 class Permission
   extends Model<PermissionAttributes, PermissionCreationAttributes>
@@ -17,29 +19,42 @@ class Permission
   declare id: number;
   declare name: string;
   declare description?: string;
+  declare readonly createdAt?: Date;
+  declare readonly updatedAt?: Date;
 }
 
 Permission.init(
   {
     id: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     name: {
       type: DataTypes.STRING(50),
-      unique: true,
       allowNull: false,
+      unique: true,
     },
     description: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    createdAt: {
+      type: DataTypes.DATE,
+      field: "created_at",
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      field: "updated_at",
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize,
     tableName: "permissions",
-    timestamps: false,
+    timestamps: true,
+    underscored: true,
   }
 );
 

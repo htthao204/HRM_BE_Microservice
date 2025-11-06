@@ -1,37 +1,47 @@
 import { Model, DataTypes, Optional } from "sequelize";
-import sequelize from "../config/db"; // sửa path theo project của bạn
+import sequelize from "../config/db";
 
-// 1. Interface cho các thuộc tính của bảng
-interface WorkShiftAttributes {
+export interface WorkShiftAttributes {
   id: number;
+  code: string;
   name: string;
   startTime: string;
   endTime: string;
+  breakStart?: string | null;
+  breakEnd?: string | null;
   totalHours: number;
+  isNightShift?: boolean;
+  isActive?: boolean;
+  description?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-// 2. Interface cho tạo mới (id, createdAt, updatedAt optional)
-interface WorkShiftCreationAttributes
-  extends Optional<WorkShiftAttributes, "id" | "createdAt" | "updatedAt"> {}
+export interface WorkShiftCreationAttributes
+  extends Optional<
+    WorkShiftAttributes,
+    "id" | "createdAt" | "updatedAt" | "isNightShift" | "isActive"
+  > {}
 
-// 3. Class model
-class WorkShift
+export class WorkShift
   extends Model<WorkShiftAttributes, WorkShiftCreationAttributes>
   implements WorkShiftAttributes
 {
   declare id: number;
+  declare code: string;
   declare name: string;
   declare startTime: string;
   declare endTime: string;
+  declare breakStart?: string | null;
+  declare breakEnd?: string | null;
   declare totalHours: number;
-
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
+  declare isNightShift?: boolean;
+  declare isActive?: boolean;
+  declare description?: string | null;
+  declare createdAt?: Date;
+  declare updatedAt?: Date;
 }
 
-// 4. Init model
 WorkShift.init(
   {
     id: {
@@ -39,25 +49,63 @@ WorkShift.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
-      type: DataTypes.STRING(100),
+    code: {
+      type: DataTypes.STRING(20),
       allowNull: false,
       unique: true,
     },
+    name: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
     startTime: {
+      field: "start_time",
       type: DataTypes.TIME,
       allowNull: false,
-      field: "start_time",
     },
     endTime: {
+      field: "end_time",
       type: DataTypes.TIME,
       allowNull: false,
-      field: "end_time",
+    },
+    breakStart: {
+      field: "break_start",
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    breakEnd: {
+      field: "break_end",
+      type: DataTypes.TIME,
+      allowNull: true,
     },
     totalHours: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
       field: "total_hours",
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: false,
+    },
+    isNightShift: {
+      field: "is_night_shift",
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    isActive: {
+      field: "is_active",
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      field: "created_at",
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      field: "updated_at",
+      defaultValue: DataTypes.NOW,
     },
   },
   {
@@ -69,4 +117,4 @@ WorkShift.init(
   }
 );
 
-export { WorkShift, WorkShiftAttributes, WorkShiftCreationAttributes };
+export default WorkShift;

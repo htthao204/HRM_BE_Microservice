@@ -1,23 +1,27 @@
-import { Router } from "express";
+import express from "express";
 import {
-  getAllAttendanceLogsController,
-  getAttendanceLogsByEmployeeController,
-  getLatestLogByEmployeeController,
+  getAttendanceLogsController,
   createAttendanceLogController,
+  updateAttendanceLogController,
+  deleteAttendanceLogController,
+  exportAttendanceLogController,
 } from "../controllers/attendanceLogController";
 
-const router = Router();
+const router = express.Router();
 
-// Lấy tất cả log
-router.get("/attendance", getAllAttendanceLogsController);
+// Lấy danh sách + filter
+router.get("/filter", getAttendanceLogsController);
 
-// Lấy log của 1 nhân viên
-router.get("/attendance/:employeeId", getAttendanceLogsByEmployeeController);
+// Tạo mới
+router.post("/", createAttendanceLogController);
 
-// Lấy log mới nhất
-router.get("/attendance/latest/:employeeId", getLatestLogByEmployeeController);
+// Cập nhật
+router.put("/:id", updateAttendanceLogController);
 
-// Tạo log mới
-router.post("/attendance", createAttendanceLogController);
+// Xóa
+router.delete("/:id", deleteAttendanceLogController);
+
+// Xuất Excel
+router.get("/export/excel", exportAttendanceLogController);
 
 export default router;

@@ -1,39 +1,43 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
-import SalaryType from "./salaryTypeModel";
-import SalaryStructureType from "./salaryStructureTypeModel";
+import { SalaryType } from "./salaryTypeModel";
+import { EmployeeInformation } from "./employeeModel";
 
 interface SalaryStructureAttributes {
   id: number;
-  salary_structure_type_id: number;
-  salary_type_id: number;
-  value_type: "Fixed" | "Percentage" | "Formula-based";
-  value: number;
-  effective_from: Date;
-  effective_to?: Date;
-  created_at?: Date;
-  updated_at?: Date;
+  employeeId: number;
+  salaryTypeId: number;
+  amount: number;
+  calculationType: "fixed" | "percentage" | "formula";
+  formula: string | null;
+  effectiveDate: Date;
+  endDate: Date | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface SalaryStructureCreationAttributes
   extends Optional<
     SalaryStructureAttributes,
-    "id" | "effective_to" | "created_at" | "updated_at"
+    "id" | "formula" | "endDate" | "isActive" | "createdAt" | "updatedAt"
   > {}
 
 class SalaryStructure
   extends Model<SalaryStructureAttributes, SalaryStructureCreationAttributes>
   implements SalaryStructureAttributes
 {
-  declare id: number;
-  declare salary_structure_type_id: number;
-  declare salary_type_id: number;
-  declare value_type: "Fixed" | "Percentage" | "Formula-based";
-  declare value: number;
-  declare effective_from: Date;
-  declare effective_to?: Date;
-  declare created_at: Date;
-  declare updated_at: Date;
+  public id!: number;
+  public employeeId!: number;
+  public salaryTypeId!: number;
+  public amount!: number;
+  public calculationType!: "fixed" | "percentage" | "formula";
+  public formula!: string | null;
+  public effectiveDate!: Date;
+  public endDate!: Date | null;
+  public isActive!: boolean;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
 SalaryStructure.init(
@@ -43,52 +47,112 @@ SalaryStructure.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    salary_structure_type_id: {
+    employeeId: {
+      field: "employee_id",
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "salary_structure_types", key: "id" },
+      references: {
+        model: "employee_information",
+        key: "id",
+      },
     },
-    salary_type_id: {
+    salaryTypeId: {
+      field: "salary_type_id",
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "salary_types", key: "id" },
+      references: {
+        model: "salary_types",
+        key: "id",
+      },
     },
-    value_type: {
-      type: DataTypes.ENUM("Fixed", "Percentage", "Formula-based"),
-      allowNull: false,
-    },
-    value: {
+    amount: {
       type: DataTypes.DECIMAL(15, 2),
       allowNull: false,
+      validate: {
+        min: 0,
+      },
     },
-    effective_from: {
-      type: DataTypes.DATE,
+    calculationType: {
+      field: "calculation_type",
+      type: DataTypes.STRING(20), // ✅ Khớp với VARCHAR(20) trong database
       allowNull: false,
+      defaultValue: "fixed",
+      validate: {
+        isIn: [["fixed", "percentage", "formula"]], // ✅ Validation thay cho ENUM
+      },
     },
-    effective_to: {
-      type: DataTypes.DATE,
+    formula: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
-    created_at: {
+    effectiveDate: {
+      field: "effective_date",
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+      validate: {
+        isDate: true,
+      },
+    },
+    endDate: {
+      field: "end_date",
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      validate: {
+        isDate: true,
+        isAfterEffectiveDate(value: Date | null) {
+          if (value && value < this.effectiveDate) {
+            throw new Error("End date must be after effective date");
+          }
+        },
+      },
+    },
+    isActive: {
+      field: "is_active",
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    createdAt: {
+      field: "created_at",
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    updated_at: {
+    updatedAt: {
+      field: "updated_at",
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
   },
   {
     sequelize,
     tableName: "salary_structures",
-    timestamps: false,
+    timestamps: true,
+    underscored: true, // ✅ Tự động convert camelCase to snake_case
+    indexes: [
+      {
+        fields: ["employee_id"],
+        name: "idx_salary_structures_employee",
+      },
+      {
+        fields: ["salary_type_id"],
+        name: "idx_salary_structures_salary_type",
+      },
+      {
+        fields: ["is_active"],
+        name: "idx_salary_structures_active",
+      },
+      {
+        fields: ["effective_date", "end_date"],
+        name: "idx_salary_structures_date_range",
+      },
+      {
+        fields: ["calculation_type"],
+        name: "idx_salary_structures_calc_type",
+      },
+    ],
   }
 );
-
-// Thiết lập quan hệ
-SalaryStructure.belongsTo(SalaryType, { foreignKey: "salary_type_id" });
-SalaryStructure.belongsTo(SalaryStructureType, {
-  foreignKey: "salary_structure_type_id",
-});
 
 export default SalaryStructure;

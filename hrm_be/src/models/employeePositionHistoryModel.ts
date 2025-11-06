@@ -1,83 +1,181 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
-import { EmployeeInformation } from "./employeeModel";
-import Position from "./positionModel";
-import Department from "./departmentModel";
+import { EmployeeInformation } from "./employeeInformationModel";
+import { Position } from "./positionModel";
+import { Department } from "./departmentModel";
 
 interface EmployeePositionHistoryAttributes {
   id: number;
-  employee_id: number;
-  position_id?: number;
-  department_id?: number;
-  start_date: Date;
-  end_date?: Date;
-  created_at?: Date;
-  updated_at?: Date;
+  employeeId: number;
+  positionId: number | null;
+  departmentId: number | null;
+  startDate: Date;
+  endDate: Date | null;
+  salaryBefore: number | null;
+  salaryAfter: number | null;
+  reason: string | null;
+  createdBy: number | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface EmployeePositionHistoryCreationAttributes
   extends Optional<
     EmployeePositionHistoryAttributes,
     | "id"
-    | "position_id"
-    | "department_id"
-    | "end_date"
-    | "created_at"
-    | "updated_at"
+    | "positionId"
+    | "departmentId"
+    | "endDate"
+    | "salaryBefore"
+    | "salaryAfter"
+    | "reason"
+    | "createdBy"
+    | "createdAt"
+    | "updatedAt"
   > {}
 
-class EmployeePositionHistory
+export class EmployeePositionHistory
   extends Model<
     EmployeePositionHistoryAttributes,
     EmployeePositionHistoryCreationAttributes
   >
   implements EmployeePositionHistoryAttributes
 {
-  declare id: number;
-  declare employee_id: number;
-  declare position_id?: number;
-  declare department_id?: number;
-  declare start_date: Date;
-  declare end_date?: Date;
-  declare created_at?: Date;
-  declare updated_at?: Date;
+  public id!: number;
+  public employeeId!: number;
+  public positionId!: number | null;
+  public departmentId!: number | null;
+  public startDate!: Date;
+  public endDate!: Date | null;
+  public salaryBefore!: number | null;
+  public salaryAfter!: number | null;
+  public reason!: string | null;
+  public createdBy!: number | null;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
 EmployeePositionHistory.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    employee_id: {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    employeeId: {
+      field: "employee_id",
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: "employee_information", key: "id" },
+      references: {
+        model: "employee_information",
+        key: "id",
+      },
     },
-    position_id: {
+    positionId: {
+      field: "position_id",
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: "positions", key: "id" },
+      references: {
+        model: "positions",
+        key: "id",
+      },
     },
-    department_id: {
+    departmentId: {
+      field: "department_id",
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: { model: "departments", key: "id" },
+      references: {
+        model: "departments",
+        key: "id",
+      },
     },
-    start_date: { type: DataTypes.DATE, allowNull: false },
-    end_date: { type: DataTypes.DATE, allowNull: true },
-    created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    startDate: {
+      field: "start_date",
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+      validate: {
+        isDate: true,
+      },
+    },
+    endDate: {
+      field: "end_date",
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      validate: {
+        isDate: true,
+        isAfterStartDate(value: Date | null) {
+          if (value && value <= this.startDate) {
+            throw new Error("End date must be after start date");
+          }
+        },
+      },
+    },
+    salaryBefore: {
+      field: "salary_before",
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: true,
+      validate: {
+        min: 0,
+      },
+    },
+    salaryAfter: {
+      field: "salary_after",
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: true,
+      validate: {
+        min: 0,
+      },
+    },
+    reason: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    createdBy: {
+      field: "created_by",
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "employee_information",
+        key: "id",
+      },
+    },
+    createdAt: {
+      field: "created_at",
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updatedAt: {
+      field: "updated_at",
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
   },
   {
     sequelize,
     tableName: "employee_position_history",
-    timestamps: false,
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      {
+        fields: ["employee_id"],
+        name: "idx_emp_pos_history_employee",
+      },
+      {
+        fields: ["position_id"],
+        name: "idx_emp_pos_history_position",
+      },
+      {
+        fields: ["department_id"],
+        name: "idx_emp_pos_history_department",
+      },
+      {
+        fields: ["start_date", "end_date"],
+        name: "idx_emp_pos_history_date_range",
+      },
+    ],
   }
 );
-
-// Quan hệ
-EmployeePositionHistory.belongsTo(EmployeeInformation, {
-  foreignKey: "employee_id",
-});
-EmployeePositionHistory.belongsTo(Position, { foreignKey: "position_id" });
-EmployeePositionHistory.belongsTo(Department, { foreignKey: "department_id" });
 
 export default EmployeePositionHistory;

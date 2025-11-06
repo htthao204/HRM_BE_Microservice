@@ -1,35 +1,89 @@
-// controllers/leaveController.ts
 import { Request, Response, NextFunction } from "express";
 import {
-  createLeave,
   getLeaveById,
-  getAllLeaves,
+  createLeave,
   updateLeave,
   deleteLeave,
-  getLeavesPaginated,
-  getLeavesByLeaveType,
-  getLeavesByEmployeeId,
-  getLeavesByDateRange,
   getLeavesByFilter,
+  createLeaveTemplate,
+  importLeavesFromExcel,
+  exportLeavesToExcelBuffer,
 } from "../services/leaveService";
-import { ResultResponse } from "../dto/response/resultResponse";
 import { LeaveSearchDTO } from "../dto/search/LeaveSearchDTO";
+import { ResultResponse } from "../dto/response/resultResponse";
+import multer from "multer";
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// Tạo mới đơn xin nghỉ
-export const createLeaveController = async (
+export const getLeavesByFilterController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const newLeave = await createLeave(req.body);
-    res.status(201).json(ResultResponse(true, 201, null, null, newLeave));
-  } catch (err: any) {
+    const page = Number(req.query.page) || 1;
+    const pageSize = Number(req.query.pageSize) || 10;
+
+    // Hỗ trợ nhiều tên query: startDate / startDateFrom và endDate / endDateTo
+    const startDateFrom =
+      (req.query.startDateFrom as string) ||
+      (req.query.startDate as string) ||
+      undefined;
+    const startDateTo = (req.query.startDateTo as string) || undefined;
+    const endDateFrom = (req.query.endDateFrom as string) || undefined;
+    const endDateTo =
+      (req.query.endDateTo as string) ||
+      (req.query.endDate as string) ||
+      undefined;
+
+    const filter: LeaveSearchDTO = {
+      employeeId: req.query.employeeId
+        ? Number(req.query.employeeId)
+        : undefined,
+      employeeName: req.query.employeeName
+        ? String(req.query.employeeName).trim()
+        : undefined,
+      leaveTypeId: req.query.leaveTypeId
+        ? Number(req.query.leaveTypeId)
+        : undefined,
+      leaveTypeName: req.query.leaveTypeName
+        ? String(req.query.leaveTypeName).trim()
+        : undefined,
+      reason: req.query.reason ? String(req.query.reason).trim() : undefined,
+      status: req.query.status
+        ? (String(req.query.status) as
+            | "pending"
+            | "approved"
+            | "rejected"
+            | "cancelled")
+        : undefined,
+      // ngày
+      startDateFrom: startDateFrom,
+      startDateTo: startDateTo,
+      endDateFrom: endDateFrom,
+      endDateTo: endDateTo,
+      departmentId: req.query.departmentId
+        ? Number(req.query.departmentId)
+        : undefined,
+    };
+
+    const leaves = await getLeavesByFilter(page, pageSize, filter);
+
+    return res.status(200).json(
+      ResultResponse(
+        true,
+        200,
+        null,
+        null,
+        leaves, // data
+        leaves.totalItems // totalItem
+      )
+    );
+  } catch (err) {
     next(err);
   }
 };
-
-// Lấy đơn xin nghỉ theo ID
+// Lấy chi tiết
 export const getLeaveByIdController = async (
   req: Request,
   res: Response,
@@ -37,180 +91,226 @@ export const getLeaveByIdController = async (
 ) => {
   try {
     const leave = await getLeaveById(Number(req.params.id));
-    if (!leave) {
-      return res
-        .status(404)
-        .json(ResultResponse(false, 404, "Không tìm thấy đơn xin nghỉ"));
-    }
     res.status(200).json(ResultResponse(true, 200, null, null, leave));
-  } catch (err: any) {
+  } catch (err) {
     next(err);
   }
 };
 
-// Lấy tất cả đơn xin nghỉ
-export const getAllLeavesController = async (
+// Tạo mới
+export const createLeaveController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const leaves = await getAllLeaves();
-    res
-      .status(200)
-      .json(ResultResponse(true, 200, null, null, leaves, leaves.length));
-  } catch (err: any) {
-    next(err);
-  }
-};
-// Lấy tất cả đơn xin nghỉ (có phân trang + search)
-export const getLeavesController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const pageSize = parseInt(req.query.pageSize as string) || 10;
-    const search = (req.query.search as string) || "";
-
-    const result = await getLeavesPaginated(page, pageSize, search);
-
-    res
-      .status(200)
-      .json(
-        ResultResponse(true, 200, null, null, result.data, result.totalItems)
-      );
-  } catch (err: any) {
+    const leave = await createLeave(req.body);
+    res.status(201).json(ResultResponse(true, 201, null, null, leave));
+  } catch (err) {
     next(err);
   }
 };
 
-// Cập nhật đơn xin nghỉ
+// Cập nhật
 export const updateLeaveController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const updatedLeave = await updateLeave(Number(req.params.id), req.body);
-    if (!updatedLeave) {
-      return res
-        .status(404)
-        .json(ResultResponse(false, 404, "Không tìm thấy đơn xin nghỉ"));
-    }
-    res.status(200).json(ResultResponse(true, 200, null, null, updatedLeave));
-  } catch (err: any) {
+    const leave = await updateLeave(Number(req.params.id), req.body);
+    res.status(200).json(ResultResponse(true, 200, null, null, leave));
+  } catch (err) {
     next(err);
   }
 };
 
-// Xóa đơn xin nghỉ
+// Xóa
 export const deleteLeaveController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const deleted = await deleteLeave(Number(req.params.id));
-    if (!deleted) {
-      return res
-        .status(404)
-        .json(ResultResponse(false, 404, "Không tìm thấy đơn xin nghỉ"));
+    const result = await deleteLeave(Number(req.params.id));
+    res.status(200).json(ResultResponse(true, 200, null, null, result));
+  } catch (err) {
+    next(err);
+  }
+};
+export const exportExcelController = async (req: Request, res: Response) => {
+  try {
+    console.log("🟢 Bắt đầu exportExcelController cho đơn nghỉ phép");
+
+    const {
+      employeeIds,
+      leaveTypeIds,
+      status,
+      startDateFrom,
+      startDateTo,
+      departmentId,
+    } = req.query;
+
+    const filter: any = {};
+
+    // Xử lý employeeIds
+    if (employeeIds) {
+      if (typeof employeeIds === "string") {
+        const idArray = employeeIds
+          .split(",")
+          .map((id) => {
+            const numId = Number(id.trim());
+            return isNaN(numId) ? null : numId;
+          })
+          .filter((id) => id !== null) as number[];
+
+        if (idArray.length > 0) {
+          filter.employeeIds = idArray;
+        }
+      }
     }
-    res.status(200).json(ResultResponse(true, 200, null, null, null));
-  } catch (err: any) {
-    next(err);
+
+    // Xử lý leaveTypeIds
+    if (leaveTypeIds) {
+      if (typeof leaveTypeIds === "string") {
+        const idArray = leaveTypeIds
+          .split(",")
+          .map((id) => {
+            const numId = Number(id.trim());
+            return isNaN(numId) ? null : numId;
+          })
+          .filter((id) => id !== null) as number[];
+
+        if (idArray.length > 0) {
+          filter.leaveTypeIds = idArray;
+        }
+      }
+    }
+
+    if (status) filter.status = status.toString();
+    if (startDateFrom) filter.startDateFrom = startDateFrom.toString();
+    if (startDateTo) filter.startDateTo = startDateTo.toString();
+    if (departmentId) filter.departmentId = Number(departmentId);
+
+    console.log("Filter parameters:", filter);
+
+    const buffer = await exportLeavesToExcelBuffer(filter);
+
+    console.log("✅ Export thành công, gửi file...");
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=don-nghi-phep.xlsx"
+    );
+    res.send(buffer);
+  } catch (error) {
+    console.error("❌ Lỗi trong exportExcelController:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi xuất file Excel",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
-// Lấy đơn nghỉ theo employeeId
-export const getLeavesByEmployeeIdController = async (
+
+// 🟪 Nhập Excel
+export const importLeavesFromExcelController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const employeeId = Number(req.params.employeeId);
-    const leaves = await getLeavesByEmployeeId(employeeId);
-    res.status(200).json(ResultResponse(true, 200, null, null, leaves));
+    if (!req.file) {
+      res
+        .status(400)
+        .json(
+          ResultResponse(false, 400, null, "Vui lòng chọn file Excel để nhập")
+        );
+      return;
+    }
+
+    const results = await importLeavesFromExcel(req.file.buffer);
+
+    res.json(
+      ResultResponse(
+        true,
+        200,
+        null,
+        `Nhập file thành công: ${results.success} bản ghi mới, ${results.updated} bản ghi cập nhật`,
+        results
+      )
+    );
   } catch (err: any) {
     next(err);
   }
 };
 
-// Lấy đơn nghỉ theo leaveTypeId
-export const getLeavesByLeaveTypeController = async (
+// 🟪 Download template
+export const downloadLeaveTemplateController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const leaveTypeId = Number(req.params.leaveTypeId);
-    const leaves = await getLeavesByLeaveType(leaveTypeId);
-    res.status(200).json(ResultResponse(true, 200, null, null, leaves));
+    const buffer = await createLeaveTemplate();
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=template-don-nghi-phep.xlsx"
+    );
+
+    res.send(buffer);
   } catch (err: any) {
     next(err);
   }
 };
 
-// Lấy đơn nghỉ theo khoảng thời gian
-export const getLeavesByDateRangeController = async (
+// Middleware upload file
+export const uploadFile = upload.single("file");
+
+// ... Các controller hiện có giữ nguyên
+export const getLeavesController = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const startDate = new Date(req.query.startDate as string);
-    const endDate = new Date(req.query.endDate as string);
-    const leaves = await getLeavesByDateRange(startDate, endDate);
-    res.status(200).json(ResultResponse(true, 200, null, null, leaves));
-  } catch (err: any) {
-    next(err);
-  }
-};
+    const page = parseInt((req.query.page as string) || "1");
+    const pageSize = parseInt((req.query.pageSize as string) || "10");
 
-// Lấy đơn nghỉ theo nhiều filter (employeeId, leaveTypeId, startDate, endDate)
-export const getLeavesByFilterController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const pageSize = parseInt(req.query.pageSize as string) || 10;
-
-    const filter: LeaveSearchDTO = {
+    const filter = {
       employeeId: req.query.employeeId
-        ? Number(req.query.employeeId)
-        : undefined,
-      employeeName: req.query.employeeName
-        ? String(req.query.employeeName)
+        ? parseInt(req.query.employeeId as string)
         : undefined,
       leaveTypeId: req.query.leaveTypeId
-        ? Number(req.query.leaveTypeId)
+        ? parseInt(req.query.leaveTypeId as string)
         : undefined,
-      leaveTypeName: req.query.leaveTypeName
-        ? String(req.query.leaveTypeName)
+      status: req.query.status as string,
+      startDateFrom: req.query.startDateFrom as string,
+      startDateTo: req.query.startDateTo as string,
+      endDateFrom: req.query.endDateFrom as string,
+      endDateTo: req.query.endDateTo as string,
+      employeeName: req.query.employeeName as string,
+      leaveTypeName: req.query.leaveTypeName as string,
+      departmentId: req.query.departmentId
+        ? parseInt(req.query.departmentId as string)
         : undefined,
-      reason: req.query.reason ? String(req.query.reason) : undefined,
-      status: req.query.status
-        ? (String(req.query.status) as "Pending" | "Approved" | "Rejected")
-        : undefined,
-      startDateFrom: req.query.startDateFrom
-        ? String(req.query.startDateFrom)
-        : undefined,
-      startDateTo: req.query.startDateTo
-        ? String(req.query.startDateTo)
-        : undefined,
-      endDateFrom: req.query.endDateFrom
-        ? String(req.query.endDateFrom)
-        : undefined,
-      endDateTo: req.query.endDateTo ? String(req.query.endDateTo) : undefined,
     };
 
-    const leaves = await getLeavesByFilter(page, pageSize, filter);
+    const result = await getLeavesByFilter(page, pageSize, filter);
 
-    res.status(200).json(ResultResponse(true, 200, null, null, leaves));
+    res.json(
+      ResultResponse(true, 200, null, null, result.data, result.totalItems)
+    );
   } catch (err: any) {
     next(err);
   }

@@ -7,7 +7,9 @@ interface PaginatedResult<T> {
   data: T[];
 }
 
-// Lấy danh sách attendances có phân trang
+// ==============================
+// 🟩 Lấy danh sách attendances có phân trang
+// ==============================
 export const getAllAttendances = async (
   page: number = 1,
   pageSize: number = 10
@@ -32,102 +34,88 @@ export const getAllAttendances = async (
   }
 };
 
-// Lấy chấm công theo ID
+// ==============================
+// 🟨 Lấy chấm công theo ID
+// ==============================
 export const getAttendanceById = async (id: number) => {
-  try {
-    const attendance = await Attendance.findByPk(id);
-    if (!attendance) throw new Error("Chấm công không tồn tại");
-    return attendance;
-  } catch (err) {
-    console.error(err);
-    throw new Error("Lấy chấm công thất bại");
-  }
+  const attendance = await Attendance.findByPk(id);
+  if (!attendance) throw new Error("Chấm công không tồn tại");
+  return attendance;
 };
 
-// Tạo mới chấm công
+// ==============================
+// 🟦 Tạo mới chấm công
+// ==============================
 export const createAttendance = async (data: {
-  employee_id: number;
+  employeeId: number;
   date: Date;
-  working_hours?: number;
-  total_checkin?: number;
-  total_checkout?: number;
+  workShiftId?: number;
+  status?: string;
+  notes?: string;
 }) => {
-  try {
-    const newAttendance = await Attendance.create({
-      ...data,
-      working_hours: data.working_hours || 0,
-      total_checkin: data.total_checkin || 0,
-      total_checkout: data.total_checkout || 0,
-    });
-
-    return newAttendance.get({ plain: true });
-  } catch (err) {
-    console.error(err);
-    throw new Error("Tạo chấm công thất bại");
-  }
+  const newAttendance = await Attendance.create({
+    employeeId: data.employeeId,
+    date: data.date,
+    workShiftId: data.workShiftId || null,
+    status: data.status || "present",
+    notes: data.notes || null,
+  });
+  return newAttendance;
 };
 
-// Cập nhật chấm công
+// ==============================
+// 🟧 Cập nhật chấm công
+// ==============================
 export const updateAttendance = async (
   id: number,
   data: Partial<{
-    working_hours?: number;
-    total_checkin?: number;
-    total_checkout?: number;
+    expectedHours: number;
+    actualHours: number;
+    checkinTime: Date;
+    checkoutTime: Date;
+    lateMinutes: number;
+    earlyMinutes: number;
+    overtimeHours: number;
+    status: string;
+    notes: string;
   }>
 ) => {
-  try {
-    const [updatedCount] = await Attendance.update(data, { where: { id } });
+  const attendance = await Attendance.findByPk(id);
+  if (!attendance) throw new Error("Không tìm thấy chấm công");
 
-    if (updatedCount === 0) {
-      throw new Error("Không tìm thấy chấm công để cập nhật");
-    }
-
-    const updated = await Attendance.findByPk(id);
-    if (!updated) throw new Error("Không tìm thấy bản ghi sau khi cập nhật");
-
-    return updated;
-  } catch (err) {
-    console.error("Update Attendance Error:", err);
-    throw new Error("Cập nhật chấm công thất bại");
-  }
+  await attendance.update(data);
+  return attendance;
 };
 
-// Xóa chấm công
+// ==============================
+// 🟥 Xóa chấm công
+// ==============================
 export const deleteAttendance = async (id: number) => {
-  try {
-    const deletedCount = await Attendance.destroy({ where: { id } });
-    if (deletedCount === 0) throw new Error("Không tìm thấy chấm công để xóa");
-    return deletedCount;
-  } catch (err) {
-    console.error(err);
-    throw new Error("Xóa chấm công thất bại");
-  }
+  const deleted = await Attendance.destroy({ where: { id } });
+  if (!deleted) throw new Error("Không tìm thấy chấm công để xóa");
+  return true;
 };
 
-// Lấy danh sách attendances theo employeeId có phân trang
+// ==============================
+// 🟦 Lấy danh sách theo employeeId có phân trang
+// ==============================
 export const getAttendancesByEmployeeId = async (
   employeeId: number,
   page: number = 1,
   pageSize: number = 10
 ): Promise<PaginatedResult<Attendance>> => {
-  try {
-    const offset = (page - 1) * pageSize;
-    const { count, rows } = await Attendance.findAndCountAll({
-      where: { employee_id: employeeId },
-      limit: pageSize,
-      offset,
-      order: [["date", "DESC"]],
-    });
+  const offset = (page - 1) * pageSize;
+  const { count, rows } = await Attendance.findAndCountAll({
+    where: { employeeId }, // ✅ đúng key theo model
+    limit: pageSize,
+    offset,
+    order: [["date", "DESC"]],
+  });
 
-    return {
-      totalItems: count,
-      totalPages: Math.ceil(count / pageSize),
-      currentPage: page,
-      data: rows,
-    };
-  } catch (err) {
-    console.error(err);
-    throw new Error("Lấy danh sách chấm công theo nhân viên thất bại");
-  }
+  return {
+    totalItems: count,
+    totalPages: Math.ceil(count / pageSize),
+    currentPage: page,
+    data: rows,
+  };
 };

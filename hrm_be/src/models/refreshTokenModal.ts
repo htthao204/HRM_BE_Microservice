@@ -32,7 +32,7 @@ RefreshToken.init(
       primaryKey: true,
     },
     token: {
-      type: DataTypes.STRING(500),
+      type: DataTypes.STRING(1000), // ✅ SQL dùng VARCHAR(1000)
       allowNull: false,
     },
     expiresAt: {
@@ -42,6 +42,7 @@ RefreshToken.init(
     },
     createdAt: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
       field: "created_at",
     },
@@ -50,7 +51,7 @@ RefreshToken.init(
       allowNull: false,
       field: "account_id",
       references: {
-        model: Account,
+        model: "accounts", // ✅ nên là tên bảng, không phải class
         key: "id",
       },
       onDelete: "CASCADE",
@@ -59,7 +60,8 @@ RefreshToken.init(
   {
     sequelize,
     tableName: "refresh_tokens",
-    timestamps: false,
+    timestamps: false, // ✅ Không có updated_at trong SQL
+    underscored: true,
   }
 );
 

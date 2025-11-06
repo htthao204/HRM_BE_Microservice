@@ -1,16 +1,22 @@
+// src/models/PositionModel.ts
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
 
-// Khai báo thuộc tính của Position
 interface PositionAttributes {
   id: number;
   name: string;
   description?: string;
+  level?: number;
+  is_active?: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
-// Khi tạo mới, `id` có thể bỏ qua vì autoIncrement
 interface PositionCreationAttributes
-  extends Optional<PositionAttributes, "id"> {}
+  extends Optional<
+    PositionAttributes,
+    "id" | "description" | "level" | "is_active" | "created_at" | "updated_at"
+  > {}
 
 class Position
   extends Model<PositionAttributes, PositionCreationAttributes>
@@ -19,6 +25,10 @@ class Position
   declare id: number;
   declare name: string;
   declare description?: string;
+  declare level?: number;
+  declare is_active?: boolean;
+  declare created_at?: Date;
+  declare updated_at?: Date;
 }
 
 Position.init(
@@ -29,18 +39,38 @@ Position.init(
       primaryKey: true,
     },
     name: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(50),
       allowNull: false,
     },
     description: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: true,
+    },
+    level: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 1,
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
     },
   },
   {
     sequelize,
     tableName: "positions",
-    timestamps: false,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   }
 );
 

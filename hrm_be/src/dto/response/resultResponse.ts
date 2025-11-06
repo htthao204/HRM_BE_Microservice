@@ -1,6 +1,7 @@
 export interface IResultResponse<T = any> {
   success: boolean;
   statusCode: number;
+  message?: string | null;
   errorMessage?: string | null;
   errorCode?: string | null;
   data?: T | null;

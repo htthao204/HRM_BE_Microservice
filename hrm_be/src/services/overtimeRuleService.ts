@@ -1,9 +1,6 @@
+import { Op } from "sequelize";
+import { OvertimeRule } from "../models/overtimeRuleModel";
 import { OvertimeRuleRequest } from "../dto/request/overtimeRuleRequest";
-import {
-  OvertimeRule,
-  OvertimeRuleAttributes,
-  OvertimeRuleCreationAttributes,
-} from "../models/overtimeRuleModel";
 
 interface PaginatedResult<T> {
   totalItems: number;
@@ -12,18 +9,35 @@ interface PaginatedResult<T> {
   data: T[];
 }
 
-// Lấy danh sách quy tắc OT (phân trang)
+// ==============================
+// 📘 LẤY DANH SÁCH QUY TẮC TĂNG CA (CÓ PHÂN TRANG + TÌM KIẾM)
+// ==============================
 export const getAllOvertimeRules = async (
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  filters?: { name?: string; status?: string }
 ): Promise<PaginatedResult<OvertimeRule>> => {
   try {
     const offset = (page - 1) * pageSize;
 
+    // Điều kiện tìm kiếm
+    const where: any = {};
+
+    if (filters?.name) {
+      where.name = { [Op.like]: `%${filters.name}%` };
+    }
+
+    if (filters?.status === "active") {
+      where.isActive = true;
+    } else if (filters?.status === "inactive") {
+      where.isActive = false;
+    }
+
     const { count, rows } = await OvertimeRule.findAndCountAll({
+      where,
       limit: pageSize,
       offset,
-      order: [["createdAt", "DESC"]],
+      order: [["created_at", "DESC"]],
     });
 
     return {
@@ -33,59 +47,114 @@ export const getAllOvertimeRules = async (
       data: rows,
     };
   } catch (error: any) {
-    console.error(error);
-    throw new Error("Lấy danh sách quy tắc tăng ca thất bại");
+    console.error("❌ Lỗi khi lấy danh sách quy tắc tăng ca:", error);
+    throw new Error("Không thể lấy danh sách quy tắc tăng ca");
   }
 };
 
-// Lấy 1 rule theo ID
-export const getOvertimeRuleById = async (id: number) => {
+// ==============================
+// 📘 LẤY 1 QUY TẮC THEO ID
+// ==============================
+export const getOvertimeRuleById = async (
+  id: number
+): Promise<OvertimeRule> => {
   try {
     const rule = await OvertimeRule.findByPk(id);
-    if (!rule) throw new Error("Quy tắc tăng ca không tồn tại");
+    if (!rule) {
+      throw new Error("Quy tắc tăng ca không tồn tại");
+    }
     return rule;
-  } catch (err) {
-    console.error(err);
-    throw new Error("Lấy quy tắc tăng ca thất bại");
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy quy tắc tăng ca:", error);
+    throw new Error("Không thể lấy quy tắc tăng ca");
   }
 };
 
-// Tạo mới rule
-export const createOvertimeRule = async (data: OvertimeRuleRequest) => {
+// ==============================
+// 🟢 TẠO MỚI QUY TẮC
+// ==============================
+export const createOvertimeRule = async (
+  data: OvertimeRuleRequest
+): Promise<OvertimeRule> => {
   try {
-    const newRule = await OvertimeRule.create(data);
-    console.log("newRule in service", newRule);
-    return newRule.get({ plain: true });
-  } catch (err) {
-    console.error(err);
-    throw new Error("Tạo quy tắc tăng ca thất bại");
+    const newRule = await OvertimeRule.create({
+      name: data.name,
+      multiplier: data.multiplier,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      applyDays: data.applyDays || "1,2,3,4,5,6,7",
+      minHours: data.minHours || 1.0,
+      description: data.description || null,
+      isActive: data.isActive ?? true,
+    });
+
+    return newRule;
+  } catch (error) {
+    console.error("❌ Lỗi khi tạo quy tắc tăng ca:", error);
+    throw new Error("Không thể tạo quy tắc tăng ca");
   }
 };
 
-// Cập nhật rule
+// ==============================
+// 🟡 CẬP NHẬT QUY TẮC
+// ==============================
 export const updateOvertimeRule = async (
   id: number,
-  data: Partial<OvertimeRuleAttributes>
-) => {
+  data: Partial<OvertimeRuleRequest>
+): Promise<OvertimeRule> => {
   try {
     const [updatedCount] = await OvertimeRule.update(data, { where: { id } });
-    if (updatedCount === 0)
+
+    if (updatedCount === 0) {
       throw new Error("Không tìm thấy quy tắc để cập nhật");
-    return await OvertimeRule.findByPk(id);
-  } catch (err) {
-    console.error(err);
-    throw new Error("Cập nhật quy tắc tăng ca thất bại");
+    }
+
+    const updated = await OvertimeRule.findByPk(id);
+    if (!updated) {
+      throw new Error("Cập nhật thất bại – không tìm thấy quy tắc");
+    }
+
+    return updated;
+  } catch (error) {
+    console.error("❌ Lỗi khi cập nhật quy tắc tăng ca:", error);
+    throw new Error("Không thể cập nhật quy tắc tăng ca");
   }
 };
 
-// Xóa rule
-export const deleteOvertimeRule = async (id: number) => {
+// ==============================
+// 🔴 XÓA QUY TẮC
+// ==============================
+export const deleteOvertimeRule = async (id: number): Promise<void> => {
   try {
     const deleted = await OvertimeRule.destroy({ where: { id } });
-    if (deleted === 0) throw new Error("Không tìm thấy quy tắc để xóa");
-    return deleted;
-  } catch (err) {
-    console.error(err);
-    throw new Error("Xóa quy tắc tăng ca thất bại");
+    if (deleted === 0) {
+      throw new Error("Không tìm thấy quy tắc để xoá");
+    }
+  } catch (error) {
+    console.error("❌ Lỗi khi xoá quy tắc tăng ca:", error);
+    throw new Error("Không thể xoá quy tắc tăng ca");
+  }
+};
+
+// ==============================
+// ⚪️ KÍCH HOẠT / VÔ HIỆU HOÁ QUY TẮC
+// ==============================
+export const toggleOvertimeRuleStatus = async (
+  id: number,
+  isActive: boolean
+): Promise<OvertimeRule> => {
+  try {
+    const rule = await OvertimeRule.findByPk(id);
+    if (!rule) {
+      throw new Error("Không tìm thấy quy tắc tăng ca");
+    }
+
+    rule.isActive = isActive;
+    await rule.save();
+
+    return rule;
+  } catch (error) {
+    console.error("❌ Lỗi khi đổi trạng thái quy tắc tăng ca:", error);
+    throw new Error("Không thể đổi trạng thái quy tắc tăng ca");
   }
 };

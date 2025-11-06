@@ -4,9 +4,13 @@ import { authentication } from "../middlewares/authMiddleware";
 import {
   createDepartmentController,
   deleteDepartmentController,
+  downloadDepartmentTemplateController,
+  exportExcelController,
   getAllDepartmentController,
   getDepartmentByIdController,
+  importDepartmentsFromExcelController,
   updateDepartmentController,
+  uploadFile,
 } from "../controllers/departmentController";
 
 const departmentRouters = Router();
@@ -18,7 +22,16 @@ departmentRouters.get(
   //authorize("department_view_all"),
   getAllDepartmentController
 );
-
+departmentRouters.get("/export-excel", exportExcelController);
+departmentRouters.post(
+  "/import-excel",
+  uploadFile,
+  importDepartmentsFromExcelController
+);
+departmentRouters.get(
+  "/download-template",
+  downloadDepartmentTemplateController
+);
 // Tạo phòng ban
 departmentRouters.post(
   "/",

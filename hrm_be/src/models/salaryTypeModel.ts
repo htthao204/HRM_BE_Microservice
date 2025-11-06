@@ -4,8 +4,11 @@ import sequelize from "../config/db";
 interface SalaryTypeAttributes {
   id: number;
   name: string;
+  code?: string;
   description?: string;
-  is_active: boolean;
+  category: "basic" | "allowance" | "bonus" | "deduction" | "overtime";
+  is_taxable?: boolean;
+  is_active?: boolean;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -13,7 +16,13 @@ interface SalaryTypeAttributes {
 interface SalaryTypeCreationAttributes
   extends Optional<
     SalaryTypeAttributes,
-    "id" | "description" | "is_active" | "created_at" | "updated_at"
+    | "id"
+    | "code"
+    | "description"
+    | "is_taxable"
+    | "is_active"
+    | "created_at"
+    | "updated_at"
   > {}
 
 class SalaryType
@@ -22,44 +31,40 @@ class SalaryType
 {
   declare id: number;
   declare name: string;
+  declare code?: string;
   declare description?: string;
-  declare is_active: boolean;
+  declare category: "basic" | "allowance" | "bonus" | "deduction" | "overtime";
+  declare is_taxable?: boolean;
+  declare is_active?: boolean;
   declare readonly created_at?: Date;
   declare readonly updated_at?: Date;
 }
 
 SalaryType.init(
   {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    name: {
-      type: DataTypes.STRING(50),
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    name: { type: DataTypes.STRING(50), allowNull: false },
+    code: { type: DataTypes.STRING(20), unique: true },
+    description: { type: DataTypes.TEXT },
+    category: {
+      type: DataTypes.ENUM(
+        "basic",
+        "allowance",
+        "bonus",
+        "deduction",
+        "overtime"
+      ),
       allowNull: false,
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    is_active: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
+    is_taxable: { type: DataTypes.BOOLEAN, defaultValue: false },
+    is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   },
   {
     sequelize,
     tableName: "salary_types",
-    timestamps: false,
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
   }
 );
 

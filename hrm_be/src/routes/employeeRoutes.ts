@@ -1,64 +1,53 @@
 import { Router } from "express";
 import { authentication } from "../middlewares/authMiddleware";
-import { authorize } from "../middlewares/authorizeMiddleware";
-
 import {
-  getAllEmployeeInforController,
+  getAllEmployeesController,
   createEmployeeController,
   updateEmployeeController,
   getEmployeeByIdController,
-  getEmployeeByDepartmentIdController,
   deleteEmployeeController,
+  getEmployeeDependentsController,
+  getEmployeeJobInfoController,
+  exportExcelController,
+  importEmployeesFromExcelController,
+  uploadFile,
+  downloadEmployeeTemplateController,
 } from "../controllers/employeeController";
 
 const employeeRouters = Router();
 
-// Lấy danh sách nhân viên có phân trang
-employeeRouters.get(
-  "/all/page",
-  authentication,
-  // authorize("view_all_users"),
-  getAllEmployeeInforController
-);
-
-// Tạo nhân viên mới
+// 🔹 Danh sách nhân viên
+employeeRouters.get("/", authentication, getAllEmployeesController);
+employeeRouters.get("/export-excel", exportExcelController);
 employeeRouters.post(
-  "/",
-  authentication,
-  // authorize("employee_create"),
-  createEmployeeController
+  "/import-excel",
+  uploadFile,
+  importEmployeesFromExcelController
 );
-
-// Cập nhật nhân viên
-employeeRouters.put(
-  "/:id",
-  authentication,
-  // authorize("employee_update"),
-  updateEmployeeController
-);
-
-// Lấy nhân viên theo ID
+employeeRouters.get("/template", downloadEmployeeTemplateController);
+// 🔹 Lấy thông tin công việc (chỉ phần cơ bản)
 employeeRouters.get(
-  "/:id",
+  "/:id/job-info",
   authentication,
-  // authorize("employee_view"),
-  getEmployeeByIdController
+  getEmployeeJobInfoController
 );
 
-// Lấy nhân viên theo phòng ban
+// 🔹 Lấy chi tiết đầy đủ nhân viên
+employeeRouters.get("/:id", authentication, getEmployeeByIdController);
+
+// 🔹 Tạo nhân viên mới
+employeeRouters.post("/", authentication, createEmployeeController);
+// 🔹 Lấy danh sách người phụ thuộc
 employeeRouters.get(
-  "/department/:departmentId",
+  "/:employeeId/dependents",
   authentication,
-  // authorize("employee_view"),
-  getEmployeeByDepartmentIdController
+  getEmployeeDependentsController
 );
 
-// Xóa nhân viên (cập nhật isDelete = true)
-employeeRouters.delete(
-  "/:id",
-  authentication,
-  // authorize("employee_delete"),
-  deleteEmployeeController
-);
+// 🔹 Cập nhật nhân viên
+employeeRouters.put("/:id", authentication, updateEmployeeController);
+
+// 🔹 Xóa nhân viên
+employeeRouters.delete("/:id", authentication, deleteEmployeeController);
 
 export default employeeRouters;

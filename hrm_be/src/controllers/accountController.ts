@@ -47,6 +47,8 @@ export const deleteAccountController = async (
     next(err);
   }
 };
+
+// Lấy thông tin user hiện tại từ token
 export const getMe = (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

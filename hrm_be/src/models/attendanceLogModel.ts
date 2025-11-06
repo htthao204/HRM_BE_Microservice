@@ -1,21 +1,30 @@
-import { DataTypes, Model, Optional } from "sequelize";
+import { Model, DataTypes, Optional } from "sequelize";
 import sequelize from "../config/db";
 import { EmployeeInformation } from "./employeeModel";
 
 interface AttendanceLogAttributes {
   id: number;
-  employee_id: number;
-  log_time: Date;
+  employeeId: number;
+  logTime: Date;
   action: "CHECKIN" | "CHECKOUT";
-  source?: "DEVICE" | "FACE_RECOGNITION" | "MANUAL";
-  status?: "SUCCESS" | "FAILED";
+  source?: "DEVICE" | "FACE_RECOGNITION" | "MANUAL" | "MOBILE";
+  status?: "SUCCESS" | "FAILED" | "LATE" | "EARLY";
+  location?: string | null;
+  deviceId?: string | null;
+  notes?: string | null;
   created_at?: Date;
 }
 
 interface AttendanceLogCreationAttributes
   extends Optional<
     AttendanceLogAttributes,
-    "id" | "source" | "status" | "created_at"
+    | "id"
+    | "source"
+    | "status"
+    | "location"
+    | "deviceId"
+    | "notes"
+    | "created_at"
   > {}
 
 export class AttendanceLog
@@ -23,11 +32,14 @@ export class AttendanceLog
   implements AttendanceLogAttributes
 {
   declare id: number;
-  declare employee_id: number;
-  declare log_time: Date;
+  declare employeeId: number;
+  declare logTime: Date;
   declare action: "CHECKIN" | "CHECKOUT";
-  declare source?: "DEVICE" | "FACE_RECOGNITION" | "MANUAL";
-  declare status?: "SUCCESS" | "FAILED";
+  declare source?: "DEVICE" | "FACE_RECOGNITION" | "MANUAL" | "MOBILE";
+  declare status?: "SUCCESS" | "FAILED" | "LATE" | "EARLY";
+  declare location?: string | null;
+  declare deviceId?: string | null;
+  declare notes?: string | null;
   declare created_at?: Date;
 }
 
@@ -38,31 +50,45 @@ AttendanceLog.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    employee_id: {
+    employeeId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: "employee_id",
       references: {
         model: "employee_information",
         key: "id",
       },
       onDelete: "CASCADE",
-      onUpdate: "CASCADE",
     },
-    log_time: {
+    logTime: {
       type: DataTypes.DATE,
       allowNull: false,
+      field: "log_time",
     },
     action: {
       type: DataTypes.ENUM("CHECKIN", "CHECKOUT"),
       allowNull: false,
     },
     source: {
-      type: DataTypes.ENUM("DEVICE", "FACE_RECOGNITION", "MANUAL"),
+      type: DataTypes.ENUM("DEVICE", "FACE_RECOGNITION", "MANUAL", "MOBILE"),
       defaultValue: "FACE_RECOGNITION",
     },
     status: {
-      type: DataTypes.ENUM("SUCCESS", "FAILED"),
+      type: DataTypes.ENUM("SUCCESS", "FAILED", "LATE", "EARLY"),
       defaultValue: "SUCCESS",
+    },
+    location: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    deviceId: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      field: "device_id",
+    },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,
@@ -72,14 +98,14 @@ AttendanceLog.init(
   {
     sequelize,
     tableName: "attendance_logs",
-    timestamps: false,
+    timestamps: false, // vì chỉ có created_at, không có updated_at
+    indexes: [
+      {
+        name: "idx_employee_log_time",
+        fields: ["employee_id", "log_time"],
+      },
+    ],
   }
 );
-
-// Thiết lập quan hệ
-AttendanceLog.belongsTo(EmployeeInformation, {
-  foreignKey: "employee_id",
-  as: "employee",
-});
 
 export default AttendanceLog;

@@ -1,159 +1,144 @@
 import { Op } from "sequelize";
+import * as XLSX from "xlsx";
+import fs from "fs";
+import path from "path";
 import AttendanceLog from "../models/attendanceLogModel";
 import { EmployeeInformation } from "../models/employeeModel";
-import {
-  AttendanceLogRequest,
-  createAttendanceLogRequest,
-} from "../dto/request/attendanceLogRequest";
 
-// Tạo một attendance log mới
-export const createAttendanceLog = async (data: AttendanceLogRequest) => {
-  try {
-    // dùng factory để đảm bảo đúng định dạng
-    const logRequest = createAttendanceLogRequest(data);
-    const log = await AttendanceLog.create(logRequest);
-    return log;
-  } catch (error) {
-    console.error("Error creating attendance log:", error);
-    throw error;
-  }
-};
-// Lấy tất cả attendance logs (có thể filter theo ngày)
-export const getAllAttendanceLogs = async (filter?: {
-  startDate?: Date;
-  endDate?: Date;
-}) => {
-  try {
-    const whereClause: any = {};
-    if (filter?.startDate && filter?.endDate) {
-      whereClause.log_time = {
-        [Op.between]: [filter.startDate, filter.endDate],
-      };
-    } else if (filter?.startDate) {
-      whereClause.log_time = {
-        [Op.gte]: filter.startDate,
-      };
-    } else if (filter?.endDate) {
-      whereClause.log_time = {
-        [Op.lte]: filter.endDate,
-      };
-    }
+export interface AttendanceLogFilter {
+  employeeName?: string;
+  action?: "CHECKIN" | "CHECKOUT";
+  status?: "SUCCESS" | "FAILED" | "LATE" | "EARLY";
+  source?: "DEVICE" | "FACE_RECOGNITION" | "MANUAL" | "MOBILE";
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+}
 
-    const logs = await AttendanceLog.findAll({
-      where: whereClause,
-      include: [
-        {
-          model: EmployeeInformation,
-          as: "employee",
-        },
-      ],
-      order: [["log_time", "DESC"]],
-    });
-
-    return logs;
-  } catch (error) {
-    console.error("Error fetching attendance logs:", error);
-    throw error;
-  }
+/* =========================
+ * 🟩 CREATE: Thêm bản ghi chấm công
+ * ========================= */
+export const createAttendanceLog = async (payload: any) => {
+  const log = await AttendanceLog.create(payload);
+  return log;
 };
 
-// Lấy attendance log của một nhân viên cụ thể
-export const getAttendanceLogsByEmployee = async (employee_id: number) => {
-  try {
-    const logs = await AttendanceLog.findAll({
-      where: { employee_id },
-      include: [
-        {
-          model: EmployeeInformation,
-          as: "employee",
-        },
-      ],
-      order: [["log_time", "DESC"]],
-    });
+/* =========================
+ * 🟨 UPDATE: Cập nhật bản ghi
+ * ========================= */
+export const updateAttendanceLog = async (id: number, payload: any) => {
+  const log = await AttendanceLog.findByPk(id);
+  if (!log) throw new Error("Attendance log not found");
 
-    return logs;
-  } catch (error) {
-    console.error(`Error fetching logs for employee ${employee_id}:`, error);
-    throw error;
-  }
+  await log.update(payload);
+  return log;
 };
 
-// Lấy log mới nhất của nhân viên
-export const getLatestLogByEmployee = async (employee_id: number) => {
-  try {
-    const log = await AttendanceLog.findOne({
-      where: { employee_id },
-      order: [["log_time", "DESC"]],
-    });
-    return log;
-  } catch (error) {
-    console.error(
-      `Error fetching latest log for employee ${employee_id}:`,
-      error
-    );
-    throw error;
-  }
+/* =========================
+ * 🟥 DELETE: Xóa bản ghi
+ * ========================= */
+export const deleteAttendanceLog = async (id: number) => {
+  const deletedCount = await AttendanceLog.destroy({ where: { id } });
+  return deletedCount > 0;
 };
-// Cập nhật attendance log
-export const updateAttendanceLog = async (
-  id: number,
-  data: AttendanceLogRequest
+
+/* =========================
+ * 🟦 FILTER + PAGINATION
+ * ========================= */
+export const getFilteredAttendanceLogs = async (
+  filter: AttendanceLogFilter
 ) => {
-  try {
-    const logRequest = createAttendanceLogRequest(data);
-    const [updated] = await AttendanceLog.update(logRequest, {
-      where: { id },
-    });
+  const {
+    employeeName,
+    action,
+    status,
+    source,
+    startDate,
+    endDate,
+    page = 1,
+    pageSize = 10,
+  } = filter;
 
-    if (updated === 0) {
-      throw new Error(`Attendance log with id ${id} not found`);
-    }
+  const where: any = {};
 
-    const updatedLog = await AttendanceLog.findByPk(id);
-    return updatedLog;
-  } catch (error) {
-    console.error(`Error updating attendance log with id ${id}:`, error);
-    throw error;
-  }
-};
-export const getAttendanceLogsByEmployeePaginated = async (
-  employee_id: number,
-  page: number = 1,
-  pageSize: number = 10,
-  startDate?: Date,
-  endDate?: Date
-) => {
-  try {
-    const offset = (page - 1) * pageSize;
-    const whereClause: any = { employee_id };
-
-    if (startDate && endDate) {
-      whereClause.log_time = { [Op.between]: [startDate, endDate] };
-    } else if (startDate) {
-      whereClause.log_time = { [Op.gte]: startDate };
-    } else if (endDate) {
-      whereClause.log_time = { [Op.lte]: endDate };
-    }
-
-    const { count, rows } = await AttendanceLog.findAndCountAll({
-      where: whereClause,
-      include: [{ model: EmployeeInformation, as: "employee" }],
-      limit: pageSize,
-      offset,
-      order: [["log_time", "DESC"]],
-    });
-
-    return {
-      totalItems: count,
-      totalPages: Math.ceil(count / pageSize),
-      currentPage: page,
-      data: rows,
+  if (action) where.action = action;
+  if (status) where.status = status;
+  if (source) where.source = source;
+  if (startDate && endDate) {
+    where.logTime = {
+      [Op.between]: [new Date(startDate), new Date(endDate)],
     };
-  } catch (error) {
-    console.error(
-      `Error fetching paginated logs for employee ${employee_id}:`,
-      error
-    );
-    throw error;
   }
+
+  // JOIN với EmployeeInformation
+  const include = [
+    {
+      model: EmployeeInformation,
+      as: "logEmployee", // ✅ đúng alias
+      attributes: ["id", "fullName", "department_id"],
+      where: employeeName
+        ? {
+            fullName: {
+              [Op.like]: `%${employeeName}%`,
+            },
+          }
+        : undefined,
+      required: false,
+    },
+  ];
+
+  const offset = (page - 1) * pageSize;
+
+  const { rows, count } = await AttendanceLog.findAndCountAll({
+    where,
+    include,
+    order: [["logTime", "DESC"]],
+    offset,
+    limit: pageSize,
+  });
+
+  return {
+    data: rows,
+    totalItems: count,
+    totalPages: Math.ceil(count / pageSize),
+    currentPage: page,
+  };
+};
+
+/* =========================
+ * 🟪 EXPORT EXCEL
+ * ========================= */
+export const exportAttendanceLogsToExcel = async (
+  filter: AttendanceLogFilter
+) => {
+  const { data } = await getFilteredAttendanceLogs(filter);
+
+  const formattedData = data.map((log: any) => ({
+    ID: log.id,
+    "Nhân viên": log.employee?.fullName || "N/A",
+    "Thời gian": log.logTime,
+    "Hành động": log.action,
+    "Trạng thái": log.status,
+    Nguồn: log.source,
+    "Địa điểm": log.location || "",
+    "Ghi chú": log.notes || "",
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(formattedData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance Logs");
+
+  const filePath = path.join(
+    __dirname,
+    `../../exports/attendance_logs_${Date.now()}.xlsx`
+  );
+
+  if (!fs.existsSync(path.dirname(filePath))) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  }
+
+  XLSX.writeFile(workbook, filePath);
+
+  return filePath;
 };

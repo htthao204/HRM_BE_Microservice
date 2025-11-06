@@ -1,45 +1,41 @@
 import { Router } from "express";
-import { authentication } from "./../middlewares/authMiddleware";
-import { authorize } from "./../middlewares/authorizeMiddleware";
-
+import { authentication } from "../middlewares/authMiddleware";
+import { authorize } from "../middlewares/authorizeMiddleware";
 import {
   createLeaveController,
   getLeaveByIdController,
-  getAllLeavesController,
   updateLeaveController,
   deleteLeaveController,
-  getLeavesByEmployeeIdController,
-  getLeavesByLeaveTypeController,
-  getLeavesByDateRangeController,
   getLeavesByFilterController,
+  exportExcelController,
+  importLeavesFromExcelController,
+  uploadFile,
+  downloadLeaveTemplateController,
 } from "../controllers/leaveController";
 
 const leaveRouter = Router();
+
+// ==============================
+// ROUTES
+// ==============================
 
 // Tạo mới đơn nghỉ
 leaveRouter.post("/", authentication, createLeaveController);
 
 // Lấy tất cả đơn nghỉ
-leaveRouter.get("/", authentication, getAllLeavesController);
-// Lấy đơn nghỉ theo filter tổng hợp (employeeId, leaveTypeId, startDate, endDate)
+leaveRouter.get("/", authentication, getLeavesByFilterController);
+leaveRouter.get("/export-excel", exportExcelController);
+leaveRouter.post("/import-excel", uploadFile, importLeavesFromExcelController);
+leaveRouter.get("/template", downloadLeaveTemplateController);
+// Lấy đơn nghỉ theo filter tổng hợp
 leaveRouter.get("/filter", authentication, getLeavesByFilterController);
 
 // Lấy đơn nghỉ theo employeeId
 leaveRouter.get(
   "/employee/:employeeId",
   authentication,
-  getLeavesByEmployeeIdController
+  getLeaveByIdController
 );
-
-// Lấy đơn nghỉ theo leaveTypeId
-leaveRouter.get(
-  "/type/:leaveTypeId",
-  authentication,
-  getLeavesByLeaveTypeController
-);
-
-// Lấy đơn nghỉ theo khoảng ngày
-leaveRouter.get("/daterange", authentication, getLeavesByDateRangeController);
 
 // Lấy đơn nghỉ theo ID
 leaveRouter.get("/:id", authentication, getLeaveByIdController);
