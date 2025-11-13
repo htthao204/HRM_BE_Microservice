@@ -147,9 +147,6 @@ EmployeeInformation.init(
   }
 );
 
-// ==============================
-// EmployeePrivateInformation
-// ==============================
 interface EmployeePrivateAttributes {
   id: number;
   employeeId: number;

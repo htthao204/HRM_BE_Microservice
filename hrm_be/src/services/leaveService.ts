@@ -126,6 +126,7 @@ export const deleteLeave = async (id: number) => {
   await leave.destroy();
   return { message: "Leave deleted successfully" };
 };
+// 🟪 Export leaves to Excel - ĐÃ SỬA
 export const exportLeavesToExcel = async (filter?: {
   employeeIds?: number[];
   leaveTypeIds?: number[];
@@ -133,6 +134,7 @@ export const exportLeavesToExcel = async (filter?: {
   startDateFrom?: string;
   startDateTo?: string;
   departmentId?: number;
+  selectedIds?: number[]; // 👈 ĐÃ THÊM
 }): Promise<ExcelJS.Workbook> => {
   try {
     console.log("Bắt đầu export đơn nghỉ phép với filter:", filter);
@@ -141,51 +143,65 @@ export const exportLeavesToExcel = async (filter?: {
     let whereClause = "WHERE 1=1";
     const replacements: any = {};
 
-    // Filter theo employeeIds
-    if (filter?.employeeIds && filter.employeeIds.length > 0) {
-      const validIds = filter.employeeIds
+    // 👈 ƯU TIÊN selectedIds NẾU CÓ
+    if (filter?.selectedIds && filter.selectedIds.length > 0) {
+      const validIds = filter.selectedIds
         .filter((id) => !isNaN(Number(id)))
         .map(Number);
       if (validIds.length > 0) {
-        whereClause += " AND l.employee_id IN (:employeeIds)";
-        replacements.employeeIds = validIds;
+        whereClause += " AND l.id IN (:selectedIds)";
+        replacements.selectedIds = validIds;
       }
-    }
+    } else {
+      // Các filter khác chỉ áp dụng khi KHÔNG có selectedIds
 
-    // Filter theo leaveTypeIds
-    if (filter?.leaveTypeIds && filter.leaveTypeIds.length > 0) {
-      const validIds = filter.leaveTypeIds
-        .filter((id) => !isNaN(Number(id)))
-        .map(Number);
-      if (validIds.length > 0) {
-        whereClause += " AND l.leave_type_id IN (:leaveTypeIds)";
-        replacements.leaveTypeIds = validIds;
+      // Filter theo employeeIds
+      if (filter?.employeeIds && filter.employeeIds.length > 0) {
+        const validIds = filter.employeeIds
+          .filter((id) => !isNaN(Number(id)))
+          .map(Number);
+        if (validIds.length > 0) {
+          whereClause += " AND l.employee_id IN (:employeeIds)";
+          replacements.employeeIds = validIds;
+        }
       }
-    }
 
-    // Filter theo status
-    if (filter?.status && filter.status.trim() !== "") {
-      whereClause += " AND l.status = :status";
-      replacements.status = filter.status.trim();
-    }
+      // Filter theo leaveTypeIds
+      if (filter?.leaveTypeIds && filter.leaveTypeIds.length > 0) {
+        const validIds = filter.leaveTypeIds
+          .filter((id) => !isNaN(Number(id)))
+          .map(Number);
+        if (validIds.length > 0) {
+          whereClause += " AND l.leave_type_id IN (:leaveTypeIds)";
+          replacements.leaveTypeIds = validIds;
+        }
+      }
 
-    // Filter theo startDate
-    if (filter?.startDateFrom) {
-      whereClause += " AND l.start_date >= :startDateFrom";
-      replacements.startDateFrom = filter.startDateFrom;
-    }
-    if (filter?.startDateTo) {
-      whereClause += " AND l.start_date <= :startDateTo";
-      replacements.startDateTo = filter.startDateTo;
-    }
+      // Filter theo status
+      if (filter?.status && filter.status.trim() !== "") {
+        whereClause += " AND l.status = :status";
+        replacements.status = filter.status.trim();
+      }
 
-    // Filter theo departmentId
-    if (filter?.departmentId) {
-      whereClause += " AND e.department_id = :departmentId";
-      replacements.departmentId = filter.departmentId;
+      // Filter theo startDate
+      if (filter?.startDateFrom) {
+        whereClause += " AND l.start_date >= :startDateFrom";
+        replacements.startDateFrom = filter.startDateFrom;
+      }
+      if (filter?.startDateTo) {
+        whereClause += " AND l.start_date <= :startDateTo";
+        replacements.startDateTo = filter.startDateTo;
+      }
+
+      // Filter theo departmentId
+      if (filter?.departmentId) {
+        whereClause += " AND e.department_id = :departmentId";
+        replacements.departmentId = filter.departmentId;
+      }
     }
 
     console.log("Where clause:", whereClause);
+    console.log("Replacements:", replacements);
 
     // 🟪 RAW QUERY ĐỂ LẤY DỮ LIỆU
     const query = `
@@ -310,7 +326,7 @@ export const exportLeavesToExcel = async (filter?: {
   }
 };
 
-// 🟪 Xuất file Excel và trả về buffer
+// 🟪 Xuất file Excel và trả về buffer - ĐÃ SỬA
 export const exportLeavesToExcelBuffer = async (
   filter?: any
 ): Promise<Buffer> => {

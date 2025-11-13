@@ -13,7 +13,7 @@ const positionRouter = Router();
 
 // Lấy tất cả chức vụ (positions)
 positionRouter.get(
-  "/",
+  "/all",
   authentication,
   ////authorize("position_view_all"),
   getAllPositionsController

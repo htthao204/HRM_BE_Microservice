@@ -18,7 +18,7 @@ if (!ACCESS_TOKEN_SECRET || !REFRESH_TOKEN_SECRET) {
  * ✅ Tạo Access Token
  */
 export const createAccessToken = (payload: any) => {
-  return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+  return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: "2h" });
 };
 
 /**

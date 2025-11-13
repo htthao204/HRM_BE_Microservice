@@ -1,10 +1,9 @@
 import ExcelJS from "exceljs";
-// services/employeeShiftAssignmentService.ts
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize"; // Thêm QueryTypes
+import sequelize from "../config/db";
 import EmployeeShiftAssignment from "../models/employeeShiftAssignmentModel";
 import { EmployeeInformation } from "../models/employeeModel";
 import { WorkShift } from "../models/workShiftModel";
-
 export interface EmployeeShiftAssignmentCreateRequest {
   employeeId: number;
   workShiftId: number;
@@ -123,7 +122,7 @@ export const exportEmployeeShiftAssignmentsToExcel = async (filter?: {
 
     console.log("Where clause:", whereClause);
 
-    // 🟪 RAW QUERY ĐỂ LẤY DỮ LIỆU
+    // 🟪 RAW QUERY ĐỂ LẤY DỮ LIỆU - SỬA LẠI ĐỂ DÙNG sequelize ĐÃ IMPORT
     const query = `
       SELECT 
         esa.id,
@@ -149,9 +148,10 @@ export const exportEmployeeShiftAssignmentsToExcel = async (filter?: {
       ORDER BY esa.assignment_date DESC, ei.full_name ASC
     `;
 
+    // SỬA: Sử dụng sequelize đã import
     const assignments: any[] = await sequelize.query(query, {
       replacements,
-      type: "SELECT",
+      type: QueryTypes.SELECT, // Sử dụng QueryTypes
     });
 
     console.log(`✅ Tìm thấy ${assignments.length} phân ca làm việc`);
@@ -249,7 +249,6 @@ export const exportEmployeeShiftAssignmentsToExcel = async (filter?: {
     throw new Error(`Không thể xuất file Excel: ${error.message}`);
   }
 };
-
 // 🟪 Xuất file Excel và trả về buffer
 export const exportEmployeeShiftAssignmentsToExcelBuffer = async (
   filter?: any

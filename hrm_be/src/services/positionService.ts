@@ -1,4 +1,4 @@
-import { Position } from "../models";
+import Position from "../models/positionModel";
 
 export const createPosition = async (positionData: any) => {
   try {

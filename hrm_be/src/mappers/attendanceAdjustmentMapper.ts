@@ -10,7 +10,7 @@ export const mapAttendanceAdjustment = (
     id: adjustment.id,
     employee: mapEmployee(adjustment.employee)!,
     adjustmentDate: adjustment.adjustment_date
-      ? adjustment.adjustment_date.toISOString().split("T")[0]
+      ? new Date(adjustment.adjustment_date).toISOString().split("T")[0]
       : "",
     originalHours: adjustment.original_hours || 0,
     adjustedHours: adjustment.adjusted_hours || 0,
@@ -20,10 +20,10 @@ export const mapAttendanceAdjustment = (
     status: adjustment.status || "pending",
     approvedBy: adjustment.approver ? mapEmployee(adjustment.approver) : null,
     approvedAt: adjustment.approved_at
-      ? adjustment.approved_at.toISOString()
+      ? new Date(adjustment.approved_at).toISOString()
       : null,
     createdAt: adjustment.created_at
-      ? adjustment.created_at.toISOString()
+      ? new Date(adjustment.created_at).toISOString()
       : new Date().toISOString(),
     updatedAt: adjustment.updated_at
       ? adjustment.updated_at.toISOString()

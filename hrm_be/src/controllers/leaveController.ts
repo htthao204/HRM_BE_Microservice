@@ -143,20 +143,31 @@ export const exportExcelController = async (req: Request, res: Response) => {
     console.log("🟢 Bắt đầu exportExcelController cho đơn nghỉ phép");
 
     const {
+      // Filter mới (frontend)
+      employeeName,
+      departmentName,
+      status,
+      startDate,
+      endDate,
+      leaveTypeId,
+
+      // Filter cũ
       employeeIds,
       leaveTypeIds,
-      status,
       startDateFrom,
       startDateTo,
       departmentId,
+
+      // Selected IDs
+      selectedIds,
     } = req.query;
 
     const filter: any = {};
 
-    // Xử lý employeeIds
-    if (employeeIds) {
-      if (typeof employeeIds === "string") {
-        const idArray = employeeIds
+    // 👈 ƯU TIÊN selectedIds
+    if (selectedIds) {
+      if (typeof selectedIds === "string") {
+        const idArray = selectedIds
           .split(",")
           .map((id) => {
             const numId = Number(id.trim());
@@ -165,51 +176,78 @@ export const exportExcelController = async (req: Request, res: Response) => {
           .filter((id) => id !== null) as number[];
 
         if (idArray.length > 0) {
-          filter.employeeIds = idArray;
+          filter.selectedIds = idArray;
+          console.log(`✅ Đã nhận ${idArray.length} selectedIds:`, idArray);
         }
       }
     }
 
-    // Xử lý leaveTypeIds
-    if (leaveTypeIds) {
-      if (typeof leaveTypeIds === "string") {
-        const idArray = leaveTypeIds
-          .split(",")
-          .map((id) => {
-            const numId = Number(id.trim());
-            return isNaN(numId) ? null : numId;
-          })
-          .filter((id) => id !== null) as number[];
+    // Chỉ xử lý các filter khác nếu KHÔNG có selectedIds
+    if (!filter.selectedIds || filter.selectedIds.length === 0) {
+      // 👈 HỖ TRỢ CẢ 2 LOẠI FILTER
 
-        if (idArray.length > 0) {
-          filter.leaveTypeIds = idArray;
+      // Filter theo tên (mới)
+      if (employeeName) filter.employeeName = employeeName.toString();
+      if (departmentName) filter.departmentName = departmentName.toString();
+
+      // Filter theo ID (cũ)
+      if (employeeIds) {
+        if (typeof employeeIds === "string") {
+          const idArray = employeeIds
+            .split(",")
+            .map((id) => Number(id.trim()))
+            .filter((id) => !isNaN(id));
+          if (idArray.length > 0) filter.employeeIds = idArray;
         }
       }
+
+      if (leaveTypeIds) {
+        if (typeof leaveTypeIds === "string") {
+          const idArray = leaveTypeIds
+            .split(",")
+            .map((id) => Number(id.trim()))
+            .filter((id) => !isNaN(id));
+          if (idArray.length > 0) filter.leaveTypeIds = idArray;
+        }
+      }
+
+      // Filter theo leaveTypeId (mới) -> chuyển thành leaveTypeIds
+      if (leaveTypeId && !filter.leaveTypeIds) {
+        filter.leaveTypeIds = [Number(leaveTypeId)];
+      }
+
+      if (status) filter.status = status.toString();
+
+      // Date range (hỗ trợ cả 2 format)
+      if (startDateFrom) filter.startDateFrom = startDateFrom.toString();
+      else if (startDate) filter.startDateFrom = startDate.toString();
+
+      if (startDateTo) filter.startDateTo = startDateTo.toString();
+      else if (endDate) filter.startDateTo = endDate.toString();
+
+      if (departmentId) filter.departmentId = Number(departmentId);
     }
 
-    if (status) filter.status = status.toString();
-    if (startDateFrom) filter.startDateFrom = startDateFrom.toString();
-    if (startDateTo) filter.startDateTo = startDateTo.toString();
-    if (departmentId) filter.departmentId = Number(departmentId);
-
-    console.log("Filter parameters:", filter);
+    console.log("Final filter parameters:", filter);
 
     const buffer = await exportLeavesToExcelBuffer(filter);
 
     console.log("✅ Export thành công, gửi file...");
 
+    // Tạo tên file dựa trên loại export
+    let fileName = "don-nghi-phep.xlsx";
+    if (filter.selectedIds && filter.selectedIds.length > 0) {
+      fileName = `don-nghi-phep-da-chon-${filter.selectedIds.length}.xlsx`;
+    }
+
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=don-nghi-phep.xlsx"
-    );
+    res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
     res.send(buffer);
   } catch (error) {
     console.error("❌ Lỗi trong exportExcelController:", error);
-
     return res.status(500).json({
       success: false,
       message: "Lỗi khi xuất file Excel",
@@ -217,7 +255,6 @@ export const exportExcelController = async (req: Request, res: Response) => {
     });
   }
 };
-
 // 🟪 Nhập Excel
 export const importLeavesFromExcelController = async (
   req: Request,

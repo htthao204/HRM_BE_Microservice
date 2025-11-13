@@ -7,6 +7,26 @@ export const mapEmployee = (
 ): EmployeeInformationResponse | null => {
   if (!employee) return null;
 
+  const toIsoDate = (value: any) => {
+    if (!value) return undefined;
+    try {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? String(value) : d.toISOString().split("T")[0];
+    } catch {
+      return String(value);
+    }
+  };
+
+  const toIsoDateTime = (value: any) => {
+    if (!value) return undefined;
+    try {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? String(value) : d.toISOString();
+    } catch {
+      return String(value);
+    }
+  };
+
   return {
     id: employee.id,
     employeeCode: employee.employeeCode,
@@ -15,15 +35,13 @@ export const mapEmployee = (
     phone: employee.phone || undefined,
     departmentId: employee.departmentId,
     positionId: employee.positionId,
-    hireDate: employee.hireDate
-      ? employee.hireDate.toISOString().split("T")[0]
-      : undefined,
+    hireDate: toIsoDate(employee.hireDate),
     accountId: employee.accountId,
     avatar: employee.avatar,
     status: employee.status,
     maritalStatus: employee.maritalStatus,
     numberOfDependents: employee.numberOfDependents,
-    createdAt: employee.createdAt.toISOString(),
-    updatedAt: employee.updatedAt.toISOString(),
+    createdAt: toIsoDateTime(employee.createdAt),
+    updatedAt: toIsoDateTime(employee.updatedAt),
   };
 };

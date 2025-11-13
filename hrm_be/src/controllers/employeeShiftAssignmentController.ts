@@ -9,6 +9,7 @@ import {
   exportEmployeeShiftAssignmentsToExcelBuffer,
   createEmployeeShiftAssignmentTemplate,
   importEmployeeShiftAssignmentsFromExcel,
+  EmployeeShiftAssignmentFilter,
 } from "../services/employeeShiftAssignmentService";
 import { ResultResponse } from "../dto/response/resultResponse";
 
@@ -25,18 +26,36 @@ export const getAllShiftAssignmentsController = async (
     const pageSize = parseInt(req.query.pageSize as string) || 10;
     const search = (req.query.search as string) || "";
 
-    // ⚙️ Nếu bạn có filter search thì có thể truyền thêm param search ở service
-    const result = await getEmployeeShiftAssignmentsByFilter(page, pageSize, {
-      assignmentType: search, // hoặc tùy logic bạn muốn lọc theo tên/loại
-    });
+    // Tạo filter object với search
+    const filter: EmployeeShiftAssignmentFilter = {};
+
+    // Thêm logic search nếu cần
+    if (search) {
+      filter.assignmentType = search;
+    }
+
+    const result = await getEmployeeShiftAssignmentsByFilter(
+      page,
+      pageSize,
+      filter
+    );
 
     res
       .status(200)
       .json(
         ResultResponse(true, 200, null, null, result.data, result.totalItems)
       );
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error("❌ Lỗi lấy danh sách phân ca:", error);
+    res
+      .status(500)
+      .json(
+        ResultResponse(
+          false,
+          500,
+          `Lỗi lấy danh sách phân ca: ${error.message}`
+        )
+      );
   }
 };
 
@@ -50,6 +69,13 @@ export const getShiftAssignmentByIdController = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, "ID không hợp lệ"));
+    }
+
     const shiftAssignment = await getEmployeeShiftAssignmentById(id);
 
     if (!shiftAssignment) {
@@ -61,8 +87,11 @@ export const getShiftAssignmentByIdController = async (
     res
       .status(200)
       .json(ResultResponse(true, 200, null, null, shiftAssignment));
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error("❌ Lỗi lấy phân ca theo ID:", error);
+    res
+      .status(500)
+      .json(ResultResponse(false, 500, `Lỗi lấy phân ca: ${error.message}`));
   }
 };
 
@@ -80,8 +109,11 @@ export const createShiftAssignmentController = async (
     res
       .status(201)
       .json(ResultResponse(true, 201, null, null, newShiftAssignment));
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error("❌ Lỗi tạo phân ca:", error);
+    res
+      .status(500)
+      .json(ResultResponse(false, 500, `Lỗi tạo phân ca: ${error.message}`));
   }
 };
 
@@ -95,6 +127,13 @@ export const updateShiftAssignmentController = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, "ID không hợp lệ"));
+    }
+
     const updatedShiftAssignment = await updateEmployeeShiftAssignment(
       id,
       req.body
@@ -109,8 +148,13 @@ export const updateShiftAssignmentController = async (
     res
       .status(200)
       .json(ResultResponse(true, 200, null, null, updatedShiftAssignment));
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error("❌ Lỗi cập nhật phân ca:", error);
+    res
+      .status(500)
+      .json(
+        ResultResponse(false, 500, `Lỗi cập nhật phân ca: ${error.message}`)
+      );
   }
 };
 
@@ -124,6 +168,13 @@ export const deleteShiftAssignmentController = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, "ID không hợp lệ"));
+    }
+
     const deleted = await deleteEmployeeShiftAssignment(id);
 
     if (!deleted) {
@@ -133,8 +184,11 @@ export const deleteShiftAssignmentController = async (
     }
 
     res.status(200).json(ResultResponse(true, 200, null, null, null));
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error("❌ Lỗi xóa phân ca:", error);
+    res
+      .status(500)
+      .json(ResultResponse(false, 500, `Lỗi xóa phân ca: ${error.message}`));
   }
 };
 
@@ -150,7 +204,7 @@ export const getAssignmentsByFilterController = async (
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 10;
 
-    const filters = {
+    const filters: EmployeeShiftAssignmentFilter = {
       employeeId: req.query.employeeId
         ? Number(req.query.employeeId)
         : undefined,
@@ -163,6 +217,23 @@ export const getAssignmentsByFilterController = async (
       dateTo: req.query.dateTo as string,
     };
 
+    // Validate date range
+    if (
+      filters.dateFrom &&
+      filters.dateTo &&
+      filters.dateFrom > filters.dateTo
+    ) {
+      return res
+        .status(400)
+        .json(
+          ResultResponse(
+            false,
+            400,
+            "Ngày bắt đầu không thể lớn hơn ngày kết thúc"
+          )
+        );
+    }
+
     const result = await getEmployeeShiftAssignmentsByFilter(
       page,
       pageSize,
@@ -174,10 +245,17 @@ export const getAssignmentsByFilterController = async (
       .json(
         ResultResponse(true, 200, null, null, result.data, result.totalItems)
       );
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error("❌ Lỗi lọc phân ca:", error);
+    res
+      .status(500)
+      .json(ResultResponse(false, 500, `Lỗi lọc phân ca: ${error.message}`));
   }
 };
+
+// ==========================
+// Export Excel
+// ==========================
 export const exportShiftAssignmentsToExcelController = async (
   req: Request,
   res: Response,
@@ -205,6 +283,23 @@ export const exportShiftAssignmentsToExcelController = async (
 
     console.log("📊 Export filters:", filters);
 
+    // Validate date range
+    if (
+      filters.dateFrom &&
+      filters.dateTo &&
+      filters.dateFrom > filters.dateTo
+    ) {
+      return res
+        .status(400)
+        .json(
+          ResultResponse(
+            false,
+            400,
+            "Ngày bắt đầu không thể lớn hơn ngày kết thúc"
+          )
+        );
+    }
+
     const buffer = await exportEmployeeShiftAssignmentsToExcelBuffer(filters);
 
     // Thiết lập headers cho file download
@@ -218,8 +313,12 @@ export const exportShiftAssignmentsToExcelController = async (
         new Date().toISOString().split("T")[0]
       }.xlsx"`
     );
-    res.setHeader("Content-Length", buffer.length);
 
+    console.log(
+      "✅ Xuất Excel thành công, kích thước:",
+      buffer.length,
+      "bytes"
+    );
     res.status(200).send(buffer);
   } catch (error: any) {
     console.error("❌ Lỗi export Excel:", error);
@@ -246,21 +345,26 @@ export const importShiftAssignmentsFromExcelController = async (
         .json(ResultResponse(false, 400, "Vui lòng chọn file Excel để import"));
     }
 
-    console.log("📥 Nhận file import:", req.file.originalname);
+    console.log(
+      "📥 Nhận file import:",
+      req.file.originalname,
+      "Size:",
+      req.file.size
+    );
 
     const result = await importEmployeeShiftAssignmentsFromExcel(
       req.file.buffer
     );
 
-    res.status(200).json(
-      ResultResponse(true, 200, "Import dữ liệu thành công", null, {
-        total: result.total,
-        success: result.success,
-        updated: result.updated,
-        duplicates: result.duplicates,
-        errors: result.errors,
-      })
-    );
+    const responseData = {
+      total: result.total,
+      success: result.success,
+      updated: result.updated,
+      duplicates: result.duplicates,
+      errors: result.errors.slice(0, 10), // Giới hạn số lỗi hiển thị
+    };
+
+    res.status(200).json(ResultResponse(true, 200, null, null, responseData));
   } catch (error: any) {
     console.error("❌ Lỗi import Excel:", error);
     res
@@ -291,8 +395,12 @@ export const downloadShiftAssignmentTemplateController = async (
       "Content-Disposition",
       "attachment; filename=template-phan-ca-lam-viec.xlsx"
     );
-    res.setHeader("Content-Length", buffer.length);
 
+    console.log(
+      "✅ Download template thành công, kích thước:",
+      buffer.length,
+      "bytes"
+    );
     res.status(200).send(buffer);
   } catch (error: any) {
     console.error("❌ Lỗi download template:", error);
@@ -315,6 +423,23 @@ export const exportShiftAssignmentsWithBodyController = async (
 
     console.log("📊 Export với body filters:", filters);
 
+    // Validate date range
+    if (
+      filters.dateFrom &&
+      filters.dateTo &&
+      filters.dateFrom > filters.dateTo
+    ) {
+      return res
+        .status(400)
+        .json(
+          ResultResponse(
+            false,
+            400,
+            "Ngày bắt đầu không thể lớn hơn ngày kết thúc"
+          )
+        );
+    }
+
     const buffer = await exportEmployeeShiftAssignmentsToExcelBuffer(filters);
 
     // Thiết lập headers cho file download
@@ -328,8 +453,12 @@ export const exportShiftAssignmentsWithBodyController = async (
         new Date().toISOString().split("T")[0]
       }.xlsx"`
     );
-    res.setHeader("Content-Length", buffer.length);
 
+    console.log(
+      "✅ Xuất Excel với body thành công, kích thước:",
+      buffer.length,
+      "bytes"
+    );
     res.status(200).send(buffer);
   } catch (error: any) {
     console.error("❌ Lỗi export Excel với body:", error);

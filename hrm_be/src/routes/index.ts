@@ -23,6 +23,13 @@ import lateEarlyRuleRouter from "./lateEarlyRuleRouter";
 import attendanceSummaryRouter from "./attendanceSummaryRouter";
 import attendanceApprovalRouters from "./attendanceApprovalRoutes";
 import employeeContractRouter from "./employeeContractRouter";
+import attendanceAdjustmentRouters from "./attendanceAdjustmentRoutes";
+import overtimeRequestRouters from "./overtimeRequestRouters";
+import salaryGradeRouter from "./salaryGradeRouter";
+import employeeSalaryGradeRouter from "./employeeSalaryGradeRouter";
+import payrollRuleRouter from "./payrollRule.routes";
+import taxRouter from "./taxRoutes";
+import countryRouter from "./countryRouter";
 
 const router = Router();
 
@@ -56,4 +63,19 @@ router.use("/late-early", authentication, lateEarlyRuleRouter);
 router.use("/attendance-summaries", authentication, attendanceSummaryRouter);
 router.use("/attendance-approvals", authentication, attendanceApprovalRouters);
 router.use("/employee-contracts", authentication, employeeContractRouter);
+router.use(
+  "/attendance-adjustments",
+  authentication,
+  attendanceAdjustmentRouters
+);
+router.use("/overtime-requests", authentication, overtimeRequestRouters);
+router.use("/salary-grades", authentication, salaryGradeRouter);
+router.use(
+  "/employee-salary-grades",
+  authentication,
+  employeeSalaryGradeRouter
+);
+router.use("/payroll-rules", authentication, payrollRuleRouter);
+router.use("/tax", authentication, taxRouter);
+router.use("/countries", authentication, countryRouter);
 export default router;

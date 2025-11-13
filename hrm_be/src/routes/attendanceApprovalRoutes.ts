@@ -14,7 +14,7 @@ const attendanceApprovalRouters = Router();
 
 // 🟩 Lấy danh sách yêu cầu phê duyệt (lọc + phân trang)
 attendanceApprovalRouters.get(
-  "/all/page",
+  "/",
   authentication,
   //authorize("attendance_approval_view_all"),
   getAllAttendanceApprovalController
