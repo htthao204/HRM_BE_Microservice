@@ -1,3 +1,4 @@
+// models/attendanceAdjustmentModel.ts
 import { Model, DataTypes, Optional } from "sequelize";
 import sequelize from "../config/db";
 import EmployeeInformation from "./employeeModel";
@@ -19,6 +20,9 @@ interface AttendanceAdjustmentAttributes {
   status?: "pending" | "approved" | "rejected";
   approved_by?: number | null;
   approved_at?: Date | null;
+  checkin_time?: string | null;
+  checkout_time?: string | null;
+  review_note?: string | null;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -33,6 +37,9 @@ interface AttendanceAdjustmentCreationAttributes
     | "status"
     | "approved_by"
     | "approved_at"
+    | "checkin_time"
+    | "checkout_time"
+    | "review_note"
     | "created_at"
     | "updated_at"
   > {}
@@ -60,6 +67,9 @@ export class AttendanceAdjustment
   declare status?: "pending" | "approved" | "rejected";
   declare approved_by?: number | null;
   declare approved_at?: Date | null;
+  declare checkin_time?: string | null;
+  declare checkout_time?: string | null;
+  declare review_note?: string | null;
   declare readonly created_at?: Date;
   declare readonly updated_at?: Date;
 }
@@ -97,6 +107,9 @@ AttendanceAdjustment.init(
     },
     approved_by: { type: DataTypes.INTEGER, allowNull: true },
     approved_at: { type: DataTypes.DATE, allowNull: true },
+    checkin_time: { type: DataTypes.TIME, allowNull: true },
+    checkout_time: { type: DataTypes.TIME, allowNull: true },
+    review_note: { type: DataTypes.TEXT, allowNull: true },
   },
   {
     sequelize,

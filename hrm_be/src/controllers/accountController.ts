@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ResultResponse } from "../dto/response/resultResponse";
 import { deleteAccount, getAllAccounts } from "../services/accountService";
-import { decodeToken } from "./auth/decodeToken";
+import { AuthenticatedRequest } from "../middlewares/authMiddleware"; // IMPORT INTERFACE
 
 // Lấy danh sách tất cả Account
 export const getAllAccountsController = async (
@@ -48,18 +48,37 @@ export const deleteAccountController = async (
   }
 };
 
-// Lấy thông tin user hiện tại từ token
-export const getMe = (req: Request, res: Response) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Token missing or invalid" });
-  }
-
-  const token = authHeader.split(" ")[1];
+// SỬA HOÀN TOÀN HÀM getMe
+export const getMe = (req: AuthenticatedRequest, res: Response): Response => {
   try {
-    const user = decodeToken(token);
-    return res.json({ success: true, user });
+    console.log("🔍 GetMe - req.Account:", req.Account);
+
+    const account = req.Account;
+
+    if (!account) {
+      console.log("❌ GetMe - No account found in request");
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    console.log("✅ GetMe success for user:", account.username);
+
+    // SỬA: Sử dụng ResultResponse format của bạn
+    return res.json(
+      ResultResponse(true, 200, null, "Get user info successfully", {
+        id: account.id,
+        username: account.username,
+        roles: account.roles,
+        permissions: account.permissions,
+      })
+    );
   } catch (error: any) {
-    return res.status(401).json({ message: error.message });
+    console.error("🔴 GetMe error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

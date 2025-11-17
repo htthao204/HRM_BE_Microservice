@@ -12,7 +12,6 @@ import {
   rejectManyAdjustments,
   approveManyAdjustments,
   deleteManyAttendanceAdjustments,
-  // THÊM CÁC HÀM MỚI
   approveAdjustmentWithTransaction,
   approveManyAdjustmentsWithTransaction,
 } from "../services/attendanceAdjustmentService";
@@ -108,6 +107,26 @@ export const createAttendanceAdjustmentController = async (
 ) => {
   try {
     const data = req.body;
+
+    // Validation cơ bản
+    if (
+      !data.employeeId ||
+      !data.adjustmentDate ||
+      !data.adjustmentType ||
+      !data.reason ||
+      !data.requestedBy
+    ) {
+      return res
+        .status(400)
+        .json(
+          ResultResponse(
+            false,
+            400,
+            "Thiếu thông tin bắt buộc: employeeId, adjustmentDate, adjustmentType, reason, requestedBy"
+          )
+        );
+    }
+
     const newAdjustment = await createAttendanceAdjustment(data);
     return res
       .status(201)
@@ -179,8 +198,15 @@ export const approveAttendanceAdjustmentController = async (
 ) => {
   try {
     const id = Number(req.params.id);
-    const approverId = Number(req.body.approverId);
-    const updated = await approveAdjustment(id, approverId);
+    const { approverId, reviewNote } = req.body;
+
+    if (!approverId) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, "Thiếu approverId"));
+    }
+
+    const updated = await approveAdjustment(id, approverId, reviewNote);
 
     if (!updated) {
       return res
@@ -207,9 +233,19 @@ export const approveAttendanceAdjustmentWithTransactionController = async (
 ) => {
   try {
     const id = Number(req.params.id);
-    const approverId = Number(req.body.approverId);
+    const { approverId, reviewNote } = req.body;
 
-    const updated = await approveAdjustmentWithTransaction(id, approverId);
+    if (!approverId) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, "Thiếu approverId"));
+    }
+
+    const updated = await approveAdjustmentWithTransaction(
+      id,
+      approverId,
+      reviewNote
+    );
 
     if (!updated) {
       return res
@@ -251,10 +287,15 @@ export const rejectAttendanceAdjustmentController = async (
 ) => {
   try {
     const id = Number(req.params.id);
-    const approverId = Number(req.body.approverId);
-    const notes = req.body.notes;
+    const { approverId, reviewNote } = req.body;
 
-    const updated = await rejectAdjustment(id, approverId, notes);
+    if (!approverId) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, "Thiếu approverId"));
+    }
+
+    const updated = await rejectAdjustment(id, approverId, reviewNote);
 
     if (!updated) {
       return res
@@ -312,14 +353,18 @@ export const bulkApproveAttendanceAdjustmentsController = async (
   next: NextFunction
 ) => {
   try {
-    const { ids, approverId } = req.body;
+    const { ids, approverId, reviewNote } = req.body;
     if (!ids || !Array.isArray(ids) || ids.length === 0 || !approverId) {
       return res
         .status(400)
         .json(ResultResponse(false, 400, "Thiếu danh sách ID hoặc approverId"));
     }
 
-    const updatedCount = await approveManyAdjustments(ids, approverId);
+    const updatedCount = await approveManyAdjustments(
+      ids,
+      approverId,
+      reviewNote
+    );
     return res.json(
       ResultResponse(
         true,
@@ -345,7 +390,7 @@ export const bulkApproveAttendanceAdjustmentsWithTransactionController = async (
   next: NextFunction
 ) => {
   try {
-    const { ids, approverId } = req.body;
+    const { ids, approverId, reviewNote } = req.body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0 || !approverId) {
       return res
@@ -355,7 +400,8 @@ export const bulkApproveAttendanceAdjustmentsWithTransactionController = async (
 
     const successCount = await approveManyAdjustmentsWithTransaction(
       ids,
-      approverId
+      approverId,
+      reviewNote
     );
 
     return res.json(
@@ -392,14 +438,18 @@ export const bulkRejectAttendanceAdjustmentsController = async (
   next: NextFunction
 ) => {
   try {
-    const { ids, approverId, notes } = req.body;
+    const { ids, approverId, reviewNote } = req.body;
     if (!ids || !Array.isArray(ids) || ids.length === 0 || !approverId) {
       return res
         .status(400)
         .json(ResultResponse(false, 400, "Thiếu danh sách ID hoặc approverId"));
     }
 
-    const updatedCount = await rejectManyAdjustments(ids, approverId, notes);
+    const updatedCount = await rejectManyAdjustments(
+      ids,
+      approverId,
+      reviewNote
+    );
     return res.json(
       ResultResponse(
         true,

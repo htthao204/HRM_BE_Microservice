@@ -1,17 +1,38 @@
-import { EmployeeInformationResponse } from "./employeeResponse";
-
+// dto/response/attendanceAdjustmentResponse.ts
 export interface AttendanceAdjustmentResponse {
   id: number;
-  employee: EmployeeInformationResponse;
+  employeeId: number;
   adjustmentDate: string;
   originalHours: number;
   adjustedHours: number;
   adjustmentType: string;
   reason: string;
-  requestedBy: EmployeeInformationResponse;
+  requestedBy: number;
   status: string;
-  approvedBy?: EmployeeInformationResponse | null;
-  approvedAt?: string | null;
+  approvedBy?: number;
+  approvedAt?: string;
+  checkinTime?: string;
+  checkoutTime?: string;
+  reviewNote?: string;
   createdAt: string;
   updatedAt: string;
+
+  // Related data
+  employee?: {
+    id: number;
+    employeeCode: string;
+    fullName: string;
+    department?: string;
+    position?: string;
+  };
+  requester?: {
+    id: number;
+    employeeCode: string;
+    fullName: string;
+  };
+  approver?: {
+    id: number;
+    employeeCode: string;
+    fullName: string;
+  };
 }

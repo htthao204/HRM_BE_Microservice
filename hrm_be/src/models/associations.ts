@@ -1,4 +1,4 @@
-// associations.ts - FIXED VERSION
+// associations.ts - ADD NOTIFICATION ASSOCIATIONS
 import Role from "./roleModel";
 import Permission from "./permissionModel";
 import Department from "./departmentModel";
@@ -34,6 +34,12 @@ import ContractHistory from "./ContractHistoryModel";
 import EmployeeContract from "./EmployeeContractModel";
 import ContractAmendment from "./ContractAmendmentModel";
 import ContractType from "./ContractTypeModel";
+
+// Import các model thông báo mới
+import Notification from "./NotificationModel";
+import NotificationReadStatus from "./NotificationReadStatusModel";
+import NotificationTemplate from "./NotificationTemplateModel";
+import NotificationSetting from "./NotificationSettingModel";
 
 export function setupAssociations() {
   // ==================== RBAC ASSOCIATIONS ====================
@@ -474,6 +480,8 @@ export function setupAssociations() {
     foreignKey: "updated_by",
     as: "updater",
   });
+
+  // ==================== CONTRACT ASSOCIATIONS ====================
   EmployeeContract.belongsTo(ContractType, {
     foreignKey: "contractTypeId",
     as: "contractType",
@@ -508,5 +516,152 @@ export function setupAssociations() {
     foreignKey: "contractId",
     as: "historyContract",
   });
+
+  // ==================== NOTIFICATION ASSOCIATIONS ====================
+
+  // Notification associations
+  Notification.belongsTo(EmployeeInformation, {
+    foreignKey: "sender_id",
+    as: "sender",
+  });
+
+  Notification.belongsTo(EmployeeInformation, {
+    foreignKey: "created_by",
+    as: "creator",
+  });
+
+  Notification.belongsTo(EmployeeInformation, {
+    foreignKey: "updated_by",
+    as: "updater",
+  });
+
+  // Notification với các bảng khác dựa trên recipient_type
+  Notification.belongsTo(Department, {
+    foreignKey: "recipient_id",
+    constraints: false,
+    as: "recipientDepartment",
+    scope: {
+      recipient_type: "department",
+    },
+  });
+
+  Notification.belongsTo(Role, {
+    foreignKey: "recipient_id",
+    constraints: false,
+    as: "recipientRole",
+    scope: {
+      recipient_type: "role",
+    },
+  });
+
+  Notification.belongsTo(EmployeeInformation, {
+    foreignKey: "recipient_id",
+    constraints: false,
+    as: "recipientEmployee",
+    scope: {
+      recipient_type: "individual",
+    },
+  });
+
+  EmployeeInformation.hasMany(Notification, {
+    foreignKey: "sender_id",
+    as: "sentNotifications",
+  });
+
+  EmployeeInformation.hasMany(Notification, {
+    foreignKey: "created_by",
+    as: "createdNotifications",
+  });
+
+  EmployeeInformation.hasMany(Notification, {
+    foreignKey: "updated_by",
+    as: "updatedNotifications",
+  });
+
+  // NotificationReadStatus associations
+  NotificationReadStatus.belongsTo(Notification, {
+    foreignKey: "notification_id",
+    as: "notification",
+  });
+
+  NotificationReadStatus.belongsTo(EmployeeInformation, {
+    foreignKey: "employee_id",
+    as: "employee",
+  });
+
+  Notification.hasMany(NotificationReadStatus, {
+    foreignKey: "notification_id",
+    as: "readStatuses",
+  });
+
+  EmployeeInformation.hasMany(NotificationReadStatus, {
+    foreignKey: "employee_id",
+    as: "notificationReadStatuses",
+  });
+
+  // NotificationTemplate associations
+  NotificationTemplate.belongsTo(EmployeeInformation, {
+    foreignKey: "created_by",
+    as: "creator",
+  });
+
+  NotificationTemplate.belongsTo(EmployeeInformation, {
+    foreignKey: "updated_by",
+    as: "updater",
+  });
+
+  EmployeeInformation.hasMany(NotificationTemplate, {
+    foreignKey: "created_by",
+    as: "createdTemplates",
+  });
+
+  EmployeeInformation.hasMany(NotificationTemplate, {
+    foreignKey: "updated_by",
+    as: "updatedTemplates",
+  });
+
+  // NotificationSetting associations
+  NotificationSetting.belongsTo(EmployeeInformation, {
+    foreignKey: "employee_id",
+    as: "employee",
+  });
+
+  EmployeeInformation.hasOne(NotificationSetting, {
+    foreignKey: "employee_id",
+    as: "notificationSettings",
+  });
+
+  // ==================== ADDITIONAL NOTIFICATION RELATIONSHIPS ====================
+
+  // Department có thể có nhiều notifications (khi recipient_type = 'department')
+  Department.hasMany(Notification, {
+    foreignKey: "recipient_id",
+    constraints: false,
+    as: "departmentNotifications",
+    scope: {
+      recipient_type: "department",
+    },
+  });
+
+  // Role có thể có nhiều notifications (khi recipient_type = 'role')
+  Role.hasMany(Notification, {
+    foreignKey: "recipient_id",
+    constraints: false,
+    as: "roleNotifications",
+    scope: {
+      recipient_type: "role",
+    },
+  });
+
+  // Employee có thể có nhiều notifications (khi recipient_type = 'individual')
+  EmployeeInformation.hasMany(Notification, {
+    foreignKey: "recipient_id",
+    constraints: false,
+    as: "individualNotifications",
+    scope: {
+      recipient_type: "individual",
+    },
+  });
+
   console.log("✅ All associations have been set up successfully!");
 }

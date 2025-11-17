@@ -1,7 +1,7 @@
-// dtos/attendanceAdjustmentRequest.ts
+// dto/request/attendanceAdjustmentRequest.ts
 export interface AttendanceAdjustmentCreateRequest {
   employeeId: number;
-  adjustmentDate: string; // YYYY-MM-DD
+  adjustmentDate: string;
   originalHours?: number;
   adjustedHours?: number;
   adjustmentType:
@@ -11,10 +11,11 @@ export interface AttendanceAdjustmentCreateRequest {
     | "manual_entry";
   reason: string;
   requestedBy: number;
+  checkinTime?: string;
+  checkoutTime?: string;
 }
 
 export interface AttendanceAdjustmentUpdateRequest {
-  adjustmentDate?: string;
   originalHours?: number;
   adjustedHours?: number;
   adjustmentType?:
@@ -23,7 +24,7 @@ export interface AttendanceAdjustmentUpdateRequest {
     | "time_correction"
     | "manual_entry";
   reason?: string;
-  status?: "pending" | "approved" | "rejected";
-  approvedBy?: number;
-  approvedAt?: string;
+  checkinTime?: string;
+  checkoutTime?: string;
+  reviewNote?: string;
 }

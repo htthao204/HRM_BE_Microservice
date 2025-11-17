@@ -8,6 +8,7 @@ import {
   createLeaveTemplate,
   importLeavesFromExcel,
   exportLeavesToExcelBuffer,
+  getLeaveBalanceWithFallback,
 } from "../services/leaveService";
 import { LeaveSearchDTO } from "../dto/search/LeaveSearchDTO";
 import { ResultResponse } from "../dto/response/resultResponse";
@@ -24,7 +25,6 @@ export const getLeavesByFilterController = async (
     const page = Number(req.query.page) || 1;
     const pageSize = Number(req.query.pageSize) || 10;
 
-    // Hỗ trợ nhiều tên query: startDate / startDateFrom và endDate / endDateTo
     const startDateFrom =
       (req.query.startDateFrom as string) ||
       (req.query.startDate as string) ||
@@ -314,7 +314,6 @@ export const downloadLeaveTemplateController = async (
 // Middleware upload file
 export const uploadFile = upload.single("file");
 
-// ... Các controller hiện có giữ nguyên
 export const getLeavesController = async (
   req: Request,
   res: Response,
@@ -350,5 +349,61 @@ export const getLeavesController = async (
     );
   } catch (err: any) {
     next(err);
+  }
+};
+export const getLeaveBalanceController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { employeeId } = req.params;
+    const { year } = req.query;
+
+    if (!employeeId) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, null, "Thiếu employeeId"));
+    }
+
+    const balanceData = await getLeaveBalanceWithFallback(
+      parseInt(employeeId),
+      year ? parseInt(year as string) : undefined
+    );
+
+    res.status(200).json(ResultResponse(true, 200, null, null, balanceData));
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 🟪 Lấy số ngày phép còn lại của nhân viên hiện tại (dùng token)
+export const getMyLeaveBalanceController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Giả sử bạn có middleware authentication và lưu employeeId trong req.user
+    const employeeId = (req as any).user?.employeeId || (req as any).user?.id;
+
+    if (!employeeId) {
+      return res
+        .status(401)
+        .json(
+          ResultResponse(false, 401, null, "Không tìm thấy thông tin nhân viên")
+        );
+    }
+
+    const { year } = req.query;
+
+    const balanceData = await getLeaveBalanceWithFallback(
+      employeeId,
+      year ? parseInt(year as string) : undefined
+    );
+
+    res.status(200).json(ResultResponse(true, 200, null, null, balanceData));
+  } catch (error) {
+    next(error);
   }
 };

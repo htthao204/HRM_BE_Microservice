@@ -11,6 +11,7 @@ import {
   createEmployeeTemplate,
   importEmployeesFromExcel,
   exportEmployeesToExcelBuffer,
+  getEmployeeByAccountId,
 } from "../services/employeeService";
 import multer from "multer";
 const storage = multer.memoryStorage();
@@ -387,3 +388,87 @@ export const downloadEmployeeTemplateController = async (
 
 // Middleware upload file
 export const uploadFile = upload.single("file");
+// ===============================
+// 🔹 Lấy employee bằng accountId
+// ===============================
+export const getEmployeeByAccountController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { accountId } = req.params;
+
+    if (!accountId || isNaN(Number(accountId))) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, null, "Account ID không hợp lệ"));
+    }
+
+    const employee = await getEmployeeByAccountId(parseInt(accountId));
+
+    if (!employee) {
+      return res
+        .status(404)
+        .json(
+          ResultResponse(false, 404, null, "Không tìm thấy thông tin nhân viên")
+        );
+    }
+
+    res.json(
+      ResultResponse(
+        true,
+        200,
+        null,
+        "Lấy thông tin nhân viên thành công",
+        employee
+      )
+    );
+  } catch (err: any) {
+    console.error("Error in getEmployeeByAccountController:", err);
+    next(err);
+  }
+};
+
+// ===============================
+// 🔹 Lấy employee của user hiện tại
+// ===============================
+export const getCurrentEmployeeController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // ✅ Lấy accountId từ token (đã được auth middleware set)
+    const accountId = (req as any).user?.id;
+
+    if (!accountId) {
+      return res
+        .status(401)
+        .json(ResultResponse(false, 401, null, "Unauthorized"));
+    }
+
+    const employee = await getEmployeeByAccountId(accountId);
+
+    if (!employee) {
+      return res
+        .status(404)
+        .json(
+          ResultResponse(false, 404, null, "Không tìm thấy thông tin nhân viên")
+        );
+    }
+
+    res.json(
+      ResultResponse(
+        true,
+        200,
+        null,
+        "Lấy thông tin nhân viên thành công",
+        employee
+      )
+    );
+  } catch (err: any) {
+    console.error("Error in getCurrentEmployeeController:", err);
+    next(err);
+  }
+};

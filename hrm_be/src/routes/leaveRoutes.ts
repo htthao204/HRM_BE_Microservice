@@ -11,6 +11,8 @@ import {
   importLeavesFromExcelController,
   uploadFile,
   downloadLeaveTemplateController,
+  getLeaveBalanceController,
+  getMyLeaveBalanceController,
 } from "../controllers/leaveController";
 
 const leaveRouter = Router();
@@ -22,14 +24,15 @@ const leaveRouter = Router();
 // Tạo mới đơn nghỉ
 leaveRouter.post("/", authentication, createLeaveController);
 
-// Lấy tất cả đơn nghỉ
+// // Lấy tất cả đơn nghỉ
 leaveRouter.get("/", authentication, getLeavesByFilterController);
 leaveRouter.get("/export-excel", exportExcelController);
 leaveRouter.post("/import-excel", uploadFile, importLeavesFromExcelController);
 leaveRouter.get("/template", downloadLeaveTemplateController);
 // Lấy đơn nghỉ theo filter tổng hợp
 leaveRouter.get("/filter", authentication, getLeavesByFilterController);
-
+leaveRouter.get("/employee/:employeeId/balance", getLeaveBalanceController);
+leaveRouter.get("/my/balance", getMyLeaveBalanceController);
 // Lấy đơn nghỉ theo employeeId
 leaveRouter.get(
   "/employee/:employeeId",

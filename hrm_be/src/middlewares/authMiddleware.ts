@@ -20,6 +20,8 @@ export const authentication = (
 ): Response | void => {
   const authHeader = req.headers.authorization;
 
+  console.log("🔍 Auth header:", authHeader?.substring(0, 20) + "...");
+
   if (!authHeader?.startsWith("Bearer ")) {
     return res
       .status(401)
@@ -27,15 +29,24 @@ export const authentication = (
   }
 
   const token = authHeader.split(" ")[1];
-  const secret = process.env.JWT_SECRET; // ✅ Lấy trực tiếp từ .env
+
+  // SỬA: Dùng ACCESS_TOKEN_SECRET thay vì JWT_SECRET
+  const secret = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
 
   if (!secret) {
-    console.error("❌ JWT_SECRET not configured");
+    console.error("❌ ACCESS_TOKEN_SECRET not configured");
     return res.status(500).json({ message: "Server config error" });
   }
 
+  console.log(
+    "🔑 Verifying token with secret:",
+    secret ? "✓ Configured" : "✗ Missing"
+  );
+
   try {
     const decoded = jwt.verify(token, secret) as JwtPayload;
+
+    console.log("✅ Token decoded successfully for user:", decoded.username);
 
     req.Account = {
       id: decoded.id as number,
@@ -48,7 +59,14 @@ export const authentication = (
 
     next();
   } catch (err: any) {
-    console.error("JWT verify error:", err.message);
-    return res.status(401).json({ message: "Invalid or expired token" });
+    console.error("🔴 JWT verify error:", err.message);
+
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Token expired" });
+    } else if (err.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Invalid token signature" });
+    } else {
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
   }
 };

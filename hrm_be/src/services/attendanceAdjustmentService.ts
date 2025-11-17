@@ -12,7 +12,81 @@ import {
   AttendanceAdjustmentUpdateRequest,
 } from "../dto/request/attendanceAdjustmentRequest";
 import { AttendanceAdjustmentResponse } from "../dto/response/attendanceAdjustmentResponse";
-import { mapAttendanceAdjustment } from "../mappers/attendanceAdjustmentMapper";
+
+// Helper function để xử lý date an toàn
+const safeToISOString = (date: any): string | undefined => {
+  if (!date) return undefined;
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return isNaN(dateObj.getTime()) ? undefined : dateObj.toISOString();
+  } catch {
+    return undefined;
+  }
+};
+
+// Helper function để lấy date string an toàn (YYYY-MM-DD)
+const safeToDateString = (date: any): string => {
+  if (!date) return new Date().toISOString().split("T")[0];
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return isNaN(dateObj.getTime())
+      ? new Date().toISOString().split("T")[0]
+      : dateObj.toISOString().split("T")[0];
+  } catch {
+    return new Date().toISOString().split("T")[0];
+  }
+};
+
+// Hàm map trực tiếp không dùng mapper
+const mapToResponse = (adjustment: any): AttendanceAdjustmentResponse => {
+  return {
+    id: adjustment.id,
+    employeeId: adjustment.employee_id,
+    adjustmentDate: safeToDateString(adjustment.adjustment_date),
+    originalHours: parseFloat(adjustment.original_hours?.toString() || "0"),
+    adjustedHours: parseFloat(adjustment.adjusted_hours?.toString() || "0"),
+    adjustmentType: adjustment.adjustment_type,
+    reason: adjustment.reason,
+    requestedBy: adjustment.requested_by,
+    status: adjustment.status || "pending",
+    approvedBy: adjustment.approved_by || undefined,
+    approvedAt: safeToISOString(adjustment.approved_at),
+    checkinTime: safeToISOString(adjustment.checkin_time),
+    checkoutTime: safeToISOString(adjustment.checkout_time),
+    reviewNote: adjustment.review_note || undefined,
+    createdAt:
+      safeToISOString(adjustment.created_at) || new Date().toISOString(),
+    updatedAt:
+      safeToISOString(adjustment.updated_at) || new Date().toISOString(),
+
+    // Related data
+    employee: adjustment.employee
+      ? {
+          id: adjustment.employee.id,
+          employeeCode: adjustment.employee.employee_code,
+          fullName: adjustment.employee.full_name,
+          department: adjustment.employee.department?.name,
+          position: adjustment.employee.position?.name,
+        }
+      : undefined,
+
+    requester: adjustment.requester
+      ? {
+          id: adjustment.requester.id,
+          employeeCode: adjustment.requester.employee_code,
+          fullName: adjustment.requester.full_name,
+        }
+      : undefined,
+
+    approver: adjustment.approver
+      ? {
+          id: adjustment.approver.id,
+          employeeCode: adjustment.approver.employee_code,
+          fullName: adjustment.approver.full_name,
+        }
+      : undefined,
+  };
+};
 
 // ==============================
 // Lấy tất cả attendance adjustments
@@ -29,7 +103,7 @@ export const getAllAttendanceAdjustments = async (): Promise<
     order: [["adjustment_date", "DESC"]],
   });
 
-  return adjustments.map(mapAttendanceAdjustment);
+  return adjustments.map(mapToResponse);
 };
 
 // ==============================
@@ -47,7 +121,7 @@ export const getAttendanceAdjustmentById = async (
   });
 
   if (!adjustment) return null;
-  return mapAttendanceAdjustment(adjustment);
+  return mapToResponse(adjustment);
 };
 
 // ==============================
@@ -100,7 +174,7 @@ export const getAttendanceAdjustmentsPage = async (
   });
 
   return {
-    data: rows.map(mapAttendanceAdjustment),
+    data: rows.map(mapToResponse),
     total: count,
     page,
     limit,
@@ -125,6 +199,8 @@ export const createAttendanceAdjustment = async (
     adjustment_type: data.adjustmentType,
     reason: data.reason,
     requested_by: data.requestedBy,
+    checkin_time: data.checkinTime,
+    checkout_time: data.checkoutTime,
     status: "pending",
   });
 
@@ -136,7 +212,7 @@ export const createAttendanceAdjustment = async (
     ],
   });
 
-  return mapAttendanceAdjustment(adjustment);
+  return mapToResponse(adjustment);
 };
 
 // ==============================
@@ -165,7 +241,7 @@ export const updateAttendanceAdjustment = async (
 
   await adjustment.update(data);
 
-  return mapAttendanceAdjustment(adjustment);
+  return mapToResponse(adjustment);
 };
 
 // ==============================
@@ -208,7 +284,8 @@ export const deleteManyAttendanceAdjustments = async (
 // ==============================
 export const approveAdjustment = async (
   id: number,
-  approverId: number
+  approverId: number,
+  reviewNote?: string
 ): Promise<AttendanceAdjustmentResponse | null> => {
   const adjustment = await AttendanceAdjustment.findByPk(id, {
     include: [
@@ -226,9 +303,10 @@ export const approveAdjustment = async (
     status: "approved",
     approved_by: approverId,
     approved_at: new Date(),
+    review_note: reviewNote,
   });
 
-  return mapAttendanceAdjustment(adjustment);
+  return mapToResponse(adjustment);
 };
 
 // ==============================
@@ -237,7 +315,7 @@ export const approveAdjustment = async (
 export const rejectAdjustment = async (
   id: number,
   approverId: number,
-  notes?: string
+  reviewNote?: string
 ): Promise<AttendanceAdjustmentResponse | null> => {
   const adjustment = await AttendanceAdjustment.findByPk(id, {
     include: [
@@ -255,12 +333,10 @@ export const rejectAdjustment = async (
     status: "rejected",
     approved_by: approverId,
     approved_at: new Date(),
-    reason: notes
-      ? `${adjustment.reason} (Lý do từ chối: ${notes})`
-      : adjustment.reason,
+    review_note: reviewNote,
   });
 
-  return mapAttendanceAdjustment(adjustment);
+  return mapToResponse(adjustment);
 };
 
 // ==============================
@@ -268,13 +344,15 @@ export const rejectAdjustment = async (
 // ==============================
 export const approveManyAdjustments = async (
   ids: number[],
-  approverId: number
+  approverId: number,
+  reviewNote?: string
 ): Promise<number> => {
   const [updatedCount] = await AttendanceAdjustment.update(
     {
       status: "approved",
       approved_by: approverId,
       approved_at: new Date(),
+      review_note: reviewNote,
     },
     {
       where: {
@@ -293,27 +371,22 @@ export const approveManyAdjustments = async (
 export const rejectManyAdjustments = async (
   ids: number[],
   approverId: number,
-  notes?: string
+  reviewNote?: string
 ): Promise<number> => {
-  const adjustments = await AttendanceAdjustment.findAll({
-    where: {
-      id: { [Op.in]: ids },
-      status: "pending",
-    },
-  });
-
-  let updatedCount = 0;
-  for (const adjustment of adjustments) {
-    await adjustment.update({
+  const [updatedCount] = await AttendanceAdjustment.update(
+    {
       status: "rejected",
       approved_by: approverId,
       approved_at: new Date(),
-      reason: notes
-        ? `${adjustment.reason} (Lý do từ chối: ${notes})`
-        : adjustment.reason,
-    });
-    updatedCount++;
-  }
+      review_note: reviewNote,
+    },
+    {
+      where: {
+        id: { [Op.in]: ids },
+        status: "pending",
+      },
+    }
+  );
 
   return updatedCount;
 };
@@ -323,18 +396,17 @@ export const rejectManyAdjustments = async (
 // ==============================
 export const approveAdjustmentWithTransaction = async (
   id: number,
-  approverId: number
+  approverId: number,
+  reviewNote?: string
 ): Promise<AttendanceAdjustmentResponse | null> => {
   const transaction = await sequelize.transaction();
 
   try {
     // Lấy adjustment với lock để tránh race condition
     const adjustment = await AttendanceAdjustment.findByPk(id, {
-      transaction: t,
-      lock: t.LOCK.UPDATE,
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
-
-    const employee = await EmployeeInformation.findByPk(adjustment.employee_id);
 
     if (
       !adjustment ||
@@ -351,6 +423,7 @@ export const approveAdjustmentWithTransaction = async (
         status: "approved",
         approved_by: approverId,
         approved_at: new Date(),
+        review_note: reviewNote,
       },
       { transaction }
     );
@@ -372,7 +445,7 @@ export const approveAdjustmentWithTransaction = async (
       ],
     });
 
-    return mapAttendanceAdjustment(adjustment);
+    return mapToResponse(adjustment);
   } catch (error) {
     await transaction.rollback();
     console.error("❌ Lỗi khi phê duyệt adjustment với transaction:", error);
@@ -385,13 +458,18 @@ export const approveAdjustmentWithTransaction = async (
 // ==============================
 export const approveManyAdjustmentsWithTransaction = async (
   ids: number[],
-  approverId: number
+  approverId: number,
+  reviewNote?: string
 ): Promise<number> => {
   let successCount = 0;
 
   for (const id of ids) {
     try {
-      const result = await approveAdjustmentWithTransaction(id, approverId);
+      const result = await approveAdjustmentWithTransaction(
+        id,
+        approverId,
+        reviewNote
+      );
       if (result) successCount++;
     } catch (error) {
       console.error(`❌ Lỗi khi phê duyệt adjustment ${id}:`, error);
@@ -413,7 +491,13 @@ const updateAttendanceForAdjustment = async (
   adjustment: AttendanceAdjustment,
   transaction: Transaction
 ): Promise<void> => {
-  const { employee_id, adjustment_date, adjusted_hours } = adjustment;
+  const {
+    employee_id,
+    adjustment_date,
+    adjusted_hours,
+    checkin_time,
+    checkout_time,
+  } = adjustment;
 
   if (!employee_id || !adjustment_date) {
     throw new Error("Thiếu thông tin employee_id hoặc adjustment_date");
@@ -435,6 +519,8 @@ const updateAttendanceForAdjustment = async (
     await attendance.update(
       {
         actual_hours: adjustedHoursNum,
+        checkin_time: checkin_time || attendance.checkin_time,
+        checkout_time: checkout_time || attendance.checkout_time,
         status: calculateAttendanceStatus(adjustedHoursNum),
         updated_at: new Date(),
       },
@@ -447,6 +533,8 @@ const updateAttendanceForAdjustment = async (
         employee_id,
         date: adjustment_date,
         actual_hours: adjustedHoursNum,
+        checkin_time: checkin_time,
+        checkout_time: checkout_time,
         expected_hours: 8, // Giả định 8 giờ/ngày
         status: calculateAttendanceStatus(adjustedHoursNum),
         created_at: new Date(),
@@ -471,7 +559,10 @@ const updateAttendanceSummaryForAdjustment = async (
     throw new Error("Thiếu thông tin employee_id hoặc adjustment_date");
   }
 
-  const summaryMonth = adjustment_date.toISOString().substring(0, 7); // "YYYY-MM"
+  // Sửa lỗi: Xử lý adjustment_date an toàn
+  const adjustmentDate = new Date(adjustment_date);
+  const summaryMonth = adjustmentDate.toISOString().substring(0, 7); // "YYYY-MM"
+
   const originalHoursNum = parseFloat(original_hours?.toString() || "0");
   const adjustedHoursNum = parseFloat(adjusted_hours?.toString() || "0");
   const hoursDiff = adjustedHoursNum - originalHoursNum;
@@ -546,7 +637,10 @@ const updatePayrollForAdjustment = async (
     return; // Không bắt buộc phải có payroll
   }
 
-  const payrollPeriod = adjustment_date.toISOString().substring(0, 7); // "YYYY-MM"
+  // Sửa lỗi: Xử lý adjustment_date an toàn
+  const adjustmentDate = new Date(adjustment_date);
+  const payrollPeriod = adjustmentDate.toISOString().substring(0, 7); // "YYYY-MM"
+
   const hoursDiff =
     parseFloat(adjusted_hours?.toString() || "0") -
     parseFloat(original_hours?.toString() || "0");

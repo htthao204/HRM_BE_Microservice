@@ -1,32 +1,92 @@
-// mappers/AttendanceAdjustmentMapper.ts
-import { AttendanceAdjustmentResponse } from "../dto/response/attendanceAdjustmentResponse";
+// mappers/attendanceAdjustmentMapper.ts
 import AttendanceAdjustment from "../models/attendanceAdjustmentModel";
-import { mapEmployee } from "./EmployeeMapper";
+import { AttendanceAdjustmentResponse } from "../dto/response/attendanceAdjustmentResponse";
+
+// Helper function để xử lý date an toàn
+const safeToISOString = (date: any): string | undefined => {
+  if (!date) return undefined;
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return isNaN(dateObj.getTime()) ? undefined : dateObj.toISOString();
+  } catch {
+    return undefined;
+  }
+};
+
+// Helper function để lấy date string an toàn (YYYY-MM-DD)
+const safeToDateString = (date: any): string | undefined => {
+  if (!date) return undefined;
+  try {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return isNaN(dateObj.getTime())
+      ? undefined
+      : dateObj.toISOString().split("T")[0];
+  } catch {
+    return undefined;
+  }
+};
 
 export const mapAttendanceAdjustment = (
   adjustment: AttendanceAdjustment
 ): AttendanceAdjustmentResponse => {
+  // Debug để xem kiểu dữ liệu thực tế
+  console.log("adjustment_date type:", typeof adjustment.adjustment_date);
+  console.log("adjustment_date value:", adjustment.adjustment_date);
+
   return {
     id: adjustment.id,
-    employee: mapEmployee(adjustment.employee)!,
-    adjustmentDate: adjustment.adjustment_date
-      ? new Date(adjustment.adjustment_date).toISOString().split("T")[0]
-      : "",
-    originalHours: adjustment.original_hours || 0,
-    adjustedHours: adjustment.adjusted_hours || 0,
+    employeeId: adjustment.employee_id,
+
+    // SỬA LỖI Ở ĐÂY: Xử lý adjustment_date an toàn
+    adjustmentDate:
+      safeToDateString(adjustment.adjustment_date) ||
+      new Date().toISOString().split("T")[0], // Fallback
+
+    originalHours: parseFloat(adjustment.original_hours?.toString() || "0"),
+    adjustedHours: parseFloat(adjustment.adjusted_hours?.toString() || "0"),
     adjustmentType: adjustment.adjustment_type,
     reason: adjustment.reason,
-    requestedBy: mapEmployee(adjustment.requester)!,
+    requestedBy: adjustment.requested_by,
     status: adjustment.status || "pending",
-    approvedBy: adjustment.approver ? mapEmployee(adjustment.approver) : null,
-    approvedAt: adjustment.approved_at
-      ? new Date(adjustment.approved_at).toISOString()
-      : null,
-    createdAt: adjustment.created_at
-      ? new Date(adjustment.created_at).toISOString()
-      : new Date().toISOString(),
-    updatedAt: adjustment.updated_at
-      ? adjustment.updated_at.toISOString()
-      : new Date().toISOString(),
+
+    // SỬA: Xử lý các trường date khác an toàn
+    approvedBy: adjustment.approved_by || undefined,
+    approvedAt: safeToISOString(adjustment.approved_at),
+    checkinTime: safeToISOString(adjustment.checkin_time),
+    checkoutTime: safeToISOString(adjustment.checkout_time),
+    reviewNote: adjustment.review_note || undefined,
+
+    // SỬA: Xử lý created_at và updated_at an toàn
+    createdAt:
+      safeToISOString(adjustment.created_at) || new Date().toISOString(),
+    updatedAt:
+      safeToISOString(adjustment.updated_at) || new Date().toISOString(),
+
+    // Related data
+    employee: adjustment.employee
+      ? {
+          id: adjustment.employee.id,
+          employeeCode: adjustment.employee.employee_code,
+          fullName: adjustment.employee.full_name,
+          department: adjustment.employee.department?.name,
+          position: adjustment.employee.position?.name,
+        }
+      : undefined,
+
+    requester: adjustment.requester
+      ? {
+          id: adjustment.requester.id,
+          employeeCode: adjustment.requester.employee_code,
+          fullName: adjustment.requester.full_name,
+        }
+      : undefined,
+
+    approver: adjustment.approver
+      ? {
+          id: adjustment.approver.id,
+          employeeCode: adjustment.approver.employee_code,
+          fullName: adjustment.approver.full_name,
+        }
+      : undefined,
   };
 };

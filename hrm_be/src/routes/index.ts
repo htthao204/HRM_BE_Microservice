@@ -8,7 +8,6 @@ import leaveRouter from "./leaveRoutes";
 import attendanceRouter from "./attendanceRoutes";
 import payrollRouter from "./payrollRoutes";
 import salaryTypeRouter from "./salaryTypeRoutes";
-
 import employeePositionRouter from "./employeePositionHistoryRouter";
 import workShiftRouter from "./workShiftRoutes";
 import overTimeRouter from "./overtimeRuleRoutes";
@@ -30,12 +29,18 @@ import employeeSalaryGradeRouter from "./employeeSalaryGradeRouter";
 import payrollRuleRouter from "./payrollRule.routes";
 import taxRouter from "./taxRoutes";
 import countryRouter from "./countryRouter";
+import roleRouter from "./roleRouter";
+import notificationIndexRouter from "./notificationIndexRouter";
+import notificationRouter from "./notificationRoutes";
+import notificationTemplateRouter from "./notificationTemplateRoutes";
+import notificationSettingRouter from "./notificationSettingRoutes";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
 router.use("/accounts", authentication, accountRouters);
 router.use("/employees", authentication, employeeRouters);
+router.use("/roles", authentication, roleRouter);
 router.use("/departments", authentication, departmentRouters);
 router.use("/leave-types", authentication, leaveTypeRouter);
 router.use("/leaves", authentication, leaveRouter);
@@ -78,4 +83,14 @@ router.use(
 router.use("/payroll-rules", authentication, payrollRuleRouter);
 router.use("/tax", authentication, taxRouter);
 router.use("/countries", authentication, countryRouter);
+
+// Thêm notification routes
+router.use("/notifications", authentication, notificationRouter);
+router.use(
+  "/notification-templates",
+  authentication,
+  notificationTemplateRouter
+);
+router.use("/notification-settings", authentication, notificationSettingRouter);
+
 export default router;

@@ -14,7 +14,196 @@ interface ImportResult {
   duplicates: number;
   updated: number;
 }
+export interface LeaveBalance {
+  leaveTypeId: number;
+  leaveTypeName: string;
+  totalDays: number;
+  usedDays: number;
+  remainingDays: number;
+  maxDays?: number;
+}
 
+export interface LeaveBalanceSummary {
+  totalAvailable: number;
+  totalUsed: number;
+  totalRemaining: number;
+}
+
+export interface LeaveBalanceData {
+  balances: LeaveBalance[];
+  summary: LeaveBalanceSummary;
+  employeeId: number;
+  year: number;
+}
+export const getLeaveBalance = async (
+  employeeId: number,
+  year?: number
+): Promise<LeaveBalanceData> => {
+  try {
+    const currentYear = year || new Date().getFullYear();
+
+    console.log(
+      `🟢 Tính số ngày phép cho nhân viên ${employeeId}, năm ${currentYear}`
+    );
+
+    // 1. Kiểm tra nhân viên tồn tại
+    const employee = await EmployeeInformation.findByPk(employeeId);
+    if (!employee) {
+      throw new Error(`Không tìm thấy nhân viên với ID: ${employeeId}`);
+    }
+
+    // 2. Lấy danh sách loại nghỉ phép đang hoạt động
+    const leaveTypes = await LeaveType.findAll({
+      where: { isActive: true },
+      attributes: ["id", "name", "code", "defaultDays", "maxDays"],
+    });
+
+    console.log(`✅ Tìm thấy ${leaveTypes.length} loại nghỉ phép`);
+
+    // 3. Lấy số ngày phép đã sử dụng trong năm
+    const usedLeavesQuery = `
+      SELECT 
+        l.leave_type_id as "leaveTypeId",
+        SUM(l.days_taken) as "totalUsedDays"
+      FROM leaves l
+      WHERE l.employee_id = :employeeId
+        AND l.status = 'approved'
+        AND EXTRACT(YEAR FROM l.start_date) = :year
+      GROUP BY l.leave_type_id
+    `;
+
+    const usedLeaves: any[] = await sequelize.query(usedLeavesQuery, {
+      replacements: { employeeId, year: currentYear },
+      type: "SELECT",
+    });
+
+    console.log(`✅ Đã sử dụng ${usedLeaves.length} loại nghỉ phép`);
+
+    // 4. Tính toán số ngày còn lại cho từng loại
+    const balances: LeaveBalance[] = leaveTypes.map((leaveType) => {
+      const usedLeave = usedLeaves.find(
+        (ul) => ul.leaveTypeId === leaveType.id
+      );
+      const usedDays = usedLeave ? parseInt(usedLeave.totalUsedDays) || 0 : 0;
+
+      // Số ngày tối đa = maxDays nếu có, không thì dùng defaultDays
+      const maxDays = leaveType.maxDays || leaveType.defaultDays;
+      const remainingDays = Math.max(0, maxDays - usedDays);
+
+      return {
+        leaveTypeId: leaveType.id,
+        leaveTypeName: leaveType.name,
+        totalDays: maxDays, // Tổng số ngày được phép
+        usedDays: usedDays, // Số ngày đã dùng
+        remainingDays: remainingDays, // Số ngày còn lại
+        maxDays: maxDays,
+      };
+    });
+
+    // 5. Tính tổng số liệu
+    const summary: LeaveBalanceSummary = {
+      totalAvailable: balances.reduce(
+        (sum, balance) => sum + balance.totalDays,
+        0
+      ),
+      totalUsed: balances.reduce((sum, balance) => sum + balance.usedDays, 0),
+      totalRemaining: balances.reduce(
+        (sum, balance) => sum + balance.remainingDays,
+        0
+      ),
+    };
+
+    console.log(
+      `✅ Tính toán xong: Tổng ${summary.totalAvailable} ngày, đã dùng ${summary.totalUsed} ngày, còn lại ${summary.totalRemaining} ngày`
+    );
+
+    return {
+      balances,
+      summary,
+      employeeId,
+      year: currentYear,
+    };
+  } catch (error) {
+    console.error("❌ Lỗi khi tính số ngày phép:", error);
+    throw new Error(`Không thể tính số ngày phép: ${error.message}`);
+  }
+};
+
+// 🟪 Lấy số ngày phép còn lại với fallback data (cho demo)
+export const getLeaveBalanceWithFallback = async (
+  employeeId: number,
+  year?: number
+): Promise<LeaveBalanceData> => {
+  try {
+    return await getLeaveBalance(employeeId, year);
+  } catch (error) {
+    console.warn("⚠️ Sử dụng dữ liệu fallback cho số ngày phép");
+
+    // Dữ liệu mẫu cho demo
+    const currentYear = year || new Date().getFullYear();
+
+    const balances: LeaveBalance[] = [
+      {
+        leaveTypeId: 1,
+        leaveTypeName: "Phép năm",
+        totalDays: 12,
+        usedDays: 3,
+        remainingDays: 9,
+        maxDays: 12,
+      },
+      {
+        leaveTypeId: 2,
+        leaveTypeName: "Phép ốm",
+        totalDays: 10,
+        usedDays: 2,
+        remainingDays: 8,
+        maxDays: 10,
+      },
+      {
+        leaveTypeId: 3,
+        leaveTypeName: "Phép không lương",
+        totalDays: 0,
+        usedDays: 0,
+        remainingDays: 0,
+      },
+      {
+        leaveTypeId: 4,
+        leaveTypeName: "Phép cưới",
+        totalDays: 3,
+        usedDays: 0,
+        remainingDays: 3,
+        maxDays: 3,
+      },
+      {
+        leaveTypeId: 5,
+        leaveTypeName: "Phép tang",
+        totalDays: 3,
+        usedDays: 1,
+        remainingDays: 2,
+        maxDays: 3,
+      },
+    ];
+
+    const summary: LeaveBalanceSummary = {
+      totalAvailable: balances.reduce(
+        (sum, balance) => sum + balance.totalDays,
+        0
+      ),
+      totalUsed: balances.reduce((sum, balance) => sum + balance.usedDays, 0),
+      totalRemaining: balances.reduce(
+        (sum, balance) => sum + balance.remainingDays,
+        0
+      ),
+    };
+
+    return {
+      balances,
+      summary,
+      employeeId,
+      year: currentYear,
+    };
+  }
+};
 export const getLeavesByFilter = async (
   page: number = 1,
   pageSize: number = 10,

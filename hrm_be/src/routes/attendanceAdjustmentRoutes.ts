@@ -11,20 +11,12 @@ import {
   bulkApproveAttendanceAdjustmentsController,
   bulkRejectAttendanceAdjustmentsController,
   bulkDeleteAttendanceAdjustmentsController,
-  // THÊM CÁC CONTROLLER MỚI
   approveAttendanceAdjustmentWithTransactionController,
   bulkApproveAttendanceAdjustmentsWithTransactionController,
   getAdjustmentApprovalImpactController,
 } from "../controllers/attendanceAdjustmentController";
 
 const attendanceAdjustmentRouters = express.Router();
-
-// ==============================
-// 📌 ATTENDANCE ADJUSTMENT ROUTES
-// ==============================
-
-// 🔹 GET ROUTES
-// ==============================
 
 // Lấy danh sách adjustments (có phân trang + filter)
 attendanceAdjustmentRouters.get("/", getAttendanceAdjustmentsController);

@@ -12,6 +12,8 @@ import {
   importEmployeesFromExcelController,
   uploadFile,
   downloadEmployeeTemplateController,
+  getEmployeeByAccountController,
+  getCurrentEmployeeController,
 } from "../controllers/employeeController";
 
 const employeeRouters = Router();
@@ -31,7 +33,7 @@ employeeRouters.get(
   authentication,
   getEmployeeJobInfoController
 );
-
+employeeRouters.get("/account/:accountId", getEmployeeByAccountController);
 // 🔹 Lấy chi tiết đầy đủ nhân viên
 employeeRouters.get("/:id", authentication, getEmployeeByIdController);
 
@@ -50,4 +52,10 @@ employeeRouters.put("/:id", authentication, updateEmployeeController);
 // 🔹 Xóa nhân viên
 employeeRouters.delete("/:id", authentication, deleteEmployeeController);
 
+// ===============================
+// 🔹 PROTECTED ROUTES (Cần authentication)
+// ===============================
+
+// ✅ Lấy employee của user hiện tại
+employeeRouters.get("/me", authentication, getCurrentEmployeeController);
 export default employeeRouters;

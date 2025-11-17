@@ -8,6 +8,7 @@ import EmployeeInformation, {
 } from "../models/employeeModel";
 import Department from "../models/departmentModel";
 import Position from "../models/positionModel";
+import Account from "../models/accountModel";
 
 export interface PaginatedResult<T> {
   totalItems: number;
@@ -22,8 +23,9 @@ interface ImportResult {
   duplicates: number;
   updated: number;
 }
+
 // ===============================
-// 🔹 1. Lấy danh sách nhân viên (phân trang)
+// 🔹 1. Lấy danh sách nhân viên (phân trang) - ĐÃ THÊM AVATAR
 // ===============================
 export const getAllEmployees = async (
   page = 1,
@@ -48,6 +50,19 @@ export const getAllEmployees = async (
     limit: pageSize,
     offset,
     order: [["created_at", "DESC"]],
+    attributes: [
+      "id",
+      "employeeCode",
+      "fullName",
+      "email",
+      "phone",
+      "avatar", // ✅ THÊM AVATAR
+      "status",
+      "maritalStatus",
+      "numberOfDependents",
+      "hireDate",
+      "createdAt",
+    ],
     include: [
       {
         model: EmployeePrivateInformation,
@@ -61,7 +76,6 @@ export const getAllEmployees = async (
         model: EmployeeDependent,
         as: "dependents",
       },
-      // ✅ SỬA THEO ĐÚNG ASSOCIATIONS
       {
         model: Department,
         as: "employeeDepartment",
@@ -81,20 +95,137 @@ export const getAllEmployees = async (
   };
 };
 
+// ===============================
+// 🔹 2. Lấy thông tin nhân viên theo accountId - ĐÃ THÊM AVATAR
+// ===============================
+export const getEmployeeByAccountId = async (
+  accountId: number
+): Promise<{
+  id: number;
+  employeeCode: string;
+  fullName: string;
+  email?: string;
+  avatar?: string; // ✅ THÊM AVATAR
+  position?: string;
+  department?: string;
+  account: {
+    id: number;
+    username: string;
+  };
+} | null> => {
+  try {
+    console.log(`🔍 Finding employee for accountId: ${accountId}`);
+
+    const employee = await EmployeeInformation.findOne({
+      where: { accountId },
+      attributes: [
+        "id",
+        "employeeCode",
+        "fullName",
+        "accountId",
+        "email",
+        "avatar", // ✅ THÊM AVATAR
+      ],
+      include: [
+        {
+          model: Department,
+          as: "employeeDepartment",
+          attributes: ["name"],
+        },
+        {
+          model: Position,
+          as: "employeePosition",
+          attributes: ["name"],
+        },
+        {
+          model: Account,
+          as: "employeeAccount",
+          attributes: ["id", "username"],
+        },
+      ],
+    });
+
+    if (!employee) {
+      console.log(`❌ No employee found for accountId: ${accountId}`);
+      return null;
+    }
+
+    const result = {
+      id: employee.id,
+      employeeCode: employee.employeeCode,
+      fullName: employee.fullName,
+      email: (employee as any).email,
+      avatar: (employee as any).avatar, // ✅ THÊM AVATAR
+      position: (employee as any).employeePosition?.name,
+      department: (employee as any).employeeDepartment?.name,
+      account: {
+        id: (employee as any).employeeAccount?.id || accountId,
+        username: (employee as any).employeeAccount?.username,
+      },
+    };
+
+    console.log(`✅ Found employee with account:`, result);
+    return result;
+  } catch (error) {
+    console.error(
+      `❌ Error getting employee by accountId ${accountId}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+/**
+ * ✅ Lấy thông tin employee của user hiện tại (cho API /employees/me)
+ */
+export const getMyEmployee = async (accountId: number): Promise<any> => {
+  return getEmployeeByAccountId(accountId);
+};
+
+// ===============================
+// 🔹 3. Lấy thông tin nhân viên theo ID - ĐÃ THÊM AVATAR
+// ===============================
 export const getEmployeeById = async (id: number) => {
   const employee = await EmployeeInformation.findByPk(id, {
+    attributes: [
+      "id",
+      "employeeCode",
+      "fullName",
+      "email",
+      "phone",
+      "avatar", // ✅ THÊM AVATAR
+      "status",
+      "maritalStatus",
+      "numberOfDependents",
+      "hireDate",
+      "departmentId",
+      "positionId",
+      "accountId",
+      "createdAt",
+    ],
     include: [
       { model: EmployeePrivateInformation, as: "privateInfo" },
       { model: EmployeeBankAccount, as: "bankAccounts" },
       { model: EmployeeDependent, as: "dependents" },
+      {
+        model: Department,
+        as: "employeeDepartment",
+        attributes: ["id", "name", "code"],
+      },
+      {
+        model: Position,
+        as: "employeePosition",
+        attributes: ["id", "name", "level"],
+      },
     ],
   });
+
   if (!employee) throw new Error("Nhân viên không tồn tại");
   return employee.get({ plain: true });
 };
 
 // ===============================
-// 🔹 3. Lấy thông tin công việc của nhân viên
+// 🔹 4. Lấy thông tin công việc của nhân viên
 // ===============================
 export const getEmployeeJobInfo = async (id: number) => {
   const employee = await EmployeeInformation.findByPk(id, {
@@ -113,7 +244,7 @@ export const getEmployeeJobInfo = async (id: number) => {
 };
 
 // ===============================
-// 🔹 4. Tạo nhân viên mới
+// 🔹 5. Tạo nhân viên mới
 // ===============================
 export const createEmployee = async (employeeData: any) => {
   const t = await sequelize.transaction();
@@ -177,7 +308,7 @@ export const createEmployee = async (employeeData: any) => {
 };
 
 // ===============================
-// 🔹 5. Cập nhật nhân viên
+// 🔹 6. Cập nhật nhân viên - ĐÃ THÊM AVATAR
 // ===============================
 export const updateEmployee = async (id: number, employeeData: any) => {
   const t = await sequelize.transaction();
@@ -234,7 +365,7 @@ export const updateEmployee = async (id: number, employeeData: any) => {
 };
 
 // ===============================
-// 🔹 6. Xóa nhân viên (soft delete)
+// 🔹 7. Xóa nhân viên (soft delete)
 // ===============================
 export const deleteEmployee = async (id: number) => {
   const emp = await EmployeeInformation.findByPk(id);
@@ -244,7 +375,7 @@ export const deleteEmployee = async (id: number) => {
 };
 
 // ===============================
-// 🔹 7. Lấy danh sách người phụ thuộc
+// 🔹 8. Lấy danh sách người phụ thuộc
 // ===============================
 export const getEmployeeDependents = async (employeeId: number) => {
   const deps = await EmployeeDependent.findAll({
@@ -252,6 +383,63 @@ export const getEmployeeDependents = async (employeeId: number) => {
   });
   return deps.map((d) => d.get({ plain: true }));
 };
+
+// ===============================
+// 🔹 9. API để upload avatar
+// ===============================
+export const updateEmployeeAvatar = async (
+  employeeId: number,
+  avatarUrl: string
+): Promise<{ success: boolean; message: string; avatarUrl: string }> => {
+  try {
+    const employee = await EmployeeInformation.findByPk(employeeId);
+    if (!employee) {
+      throw new Error("Không tìm thấy nhân viên");
+    }
+
+    await employee.update({ avatar: avatarUrl });
+
+    return {
+      success: true,
+      message: "Cập nhật avatar thành công",
+      avatarUrl: avatarUrl,
+    };
+  } catch (error: any) {
+    console.error("Lỗi khi cập nhật avatar:", error);
+    throw new Error(`Không thể cập nhật avatar: ${error.message}`);
+  }
+};
+
+// ===============================
+// 🔹 10. API để lấy URL avatar đầy đủ
+// ===============================
+export const getEmployeeAvatar = async (
+  employeeId: number
+): Promise<string | null> => {
+  try {
+    const employee = await EmployeeInformation.findByPk(employeeId, {
+      attributes: ["avatar"],
+    });
+
+    if (!employee || !employee.avatar) {
+      return null;
+    }
+
+    // Nếu avatar là relative path, chuyển thành full URL
+    let avatarUrl = employee.avatar;
+    if (avatarUrl.startsWith("/")) {
+      avatarUrl = `${
+        process.env.BASE_URL || "http://localhost:3000"
+      }${avatarUrl}`;
+    }
+
+    return avatarUrl;
+  } catch (error) {
+    console.error("Lỗi khi lấy avatar:", error);
+    return null;
+  }
+};
+
 // 🟪 Hàm hỗ trợ - Chuyển đổi status
 const getStatusText = (status: string): string => {
   const statusMap: { [key: string]: string } = {
@@ -307,7 +495,7 @@ const parseExcelDate = (dateStr: string): Date | null => {
 };
 
 // ===============================
-// 🔹 8. Xuất danh sách nhân viên ra Excel
+// 🔹 11. Xuất danh sách nhân viên ra Excel - ĐÃ THÊM AVATAR
 // ===============================
 export const exportEmployeesToExcel = async (filter?: {
   departmentIds?: number[];
@@ -359,7 +547,7 @@ export const exportEmployeesToExcel = async (filter?: {
 
     console.log("Where clause:", whereClause);
 
-    // 🟪 RAW QUERY ĐỂ LẤY DỮ LIỆU
+    // 🟪 RAW QUERY ĐỂ LẤY DỮ LIỆU - ĐÃ THÊM AVATAR
     const query = `
       SELECT 
         e.id,
@@ -367,6 +555,7 @@ export const exportEmployeesToExcel = async (filter?: {
         e.full_name as "fullName",
         e.email,
         e.phone,
+        e.avatar, -- ✅ THÊM AVATAR
         e.status,
         e.marital_status as "maritalStatus",
         e.number_of_dependents as "numberOfDependents",
@@ -392,7 +581,7 @@ export const exportEmployeesToExcel = async (filter?: {
       LEFT JOIN employee_bank_accounts eb ON e.id = eb.employee_id AND eb.is_primary = true
       ${whereClause}
       GROUP BY 
-        e.id, e.employee_code, e.full_name, e.email, e.phone, e.status, 
+        e.id, e.employee_code, e.full_name, e.email, e.phone, e.avatar, e.status, 
         e.marital_status, e.number_of_dependents, e.hire_date, e.created_at,
         d.name, p.name, ep.date_of_birth, ep.gender, ep.national_id, ep.address,
         ep.emergency_contact_name, ep.emergency_contact_phone,
@@ -411,11 +600,12 @@ export const exportEmployeesToExcel = async (filter?: {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Danh sách nhân viên");
 
-    // Định nghĩa columns
+    // Định nghĩa columns - ĐÃ THÊM AVATAR
     worksheet.columns = [
       { header: "STT", key: "stt", width: 8 },
       { header: "Mã NV", key: "employeeCode", width: 15 },
       { header: "Họ và tên", key: "fullName", width: 25 },
+      { header: "Avatar URL", key: "avatar", width: 30 }, // ✅ THÊM AVATAR
       { header: "Email", key: "email", width: 25 },
       { header: "Số điện thoại", key: "phone", width: 15 },
       { header: "Phòng ban", key: "departmentName", width: 20 },
@@ -457,6 +647,7 @@ export const exportEmployeesToExcel = async (filter?: {
         stt: index + 1,
         employeeCode: emp.employeeCode || "N/A",
         fullName: emp.fullName || "N/A",
+        avatar: emp.avatar || "Không có", // ✅ THÊM AVATAR
         email: emp.email || "N/A",
         phone: emp.phone || "N/A",
         departmentName: emp.departmentName || "N/A",
@@ -486,8 +677,13 @@ export const exportEmployeesToExcel = async (filter?: {
 
       // Căn giữa cho các ô
       row.eachCell((cell, colNumber) => {
-        if (colNumber !== 11 && colNumber !== 4 && colNumber !== 10) {
-          // Trừ cột địa chỉ, email, CMND
+        if (
+          colNumber !== 4 &&
+          colNumber !== 5 &&
+          colNumber !== 11 &&
+          colNumber !== 12
+        ) {
+          // Trừ cột avatar, email, địa chỉ, CMND
           cell.alignment = { vertical: "middle", horizontal: "center" };
         }
       });
@@ -497,21 +693,25 @@ export const exportEmployeesToExcel = async (filter?: {
     worksheet.getColumn(4).alignment = {
       vertical: "middle",
       horizontal: "left",
+    }; // Avatar
+    worksheet.getColumn(5).alignment = {
+      vertical: "middle",
+      horizontal: "left",
     }; // Email
     worksheet.getColumn(11).alignment = {
       vertical: "middle",
       horizontal: "left",
-    }; // Địa chỉ
-    worksheet.getColumn(10).alignment = {
+    }; // CMND
+    worksheet.getColumn(12).alignment = {
       vertical: "middle",
       horizontal: "left",
-    }; // CMND
+    }; // Địa chỉ
 
     // Auto filter
     if (employees.length > 0) {
       worksheet.autoFilter = {
         from: "A1",
-        to: `V${employees.length + 1}`,
+        to: `W${employees.length + 1}`,
       };
     }
 
@@ -837,6 +1037,7 @@ export const createEmployeeTemplate = async (): Promise<Buffer> => {
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
 };
+
 export const importFromExcel = async (
   buffer: Buffer
 ): Promise<{ success: number; updated: number; errors: string[] }> => {
