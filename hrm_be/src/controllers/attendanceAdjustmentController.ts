@@ -14,12 +14,13 @@ import {
   deleteManyAttendanceAdjustments,
   approveAdjustmentWithTransaction,
   approveManyAdjustmentsWithTransaction,
+  getAdjustmentStats,
+  rollbackAdjustment,
 } from "../services/attendanceAdjustmentService";
 import { ResultResponse } from "../dto/response/resultResponse";
 
 // ==============================
 // GET /attendance-adjustments
-// GET all hoặc get page
 // ==============================
 export const getAttendanceAdjustmentsController = async (
   req: Request,
@@ -37,15 +38,17 @@ export const getAttendanceAdjustmentsController = async (
       adjustmentType,
     } = req.query;
 
-    if (
+    // 🎯 FIX: Kiểm tra có query parameters không
+    const hasQueryParams =
       page ||
       limit ||
       employeeId ||
       status ||
       startDate ||
       endDate ||
-      adjustmentType
-    ) {
+      adjustmentType;
+
+    if (hasQueryParams) {
       // Pagination + filter
       const result = await getAttendanceAdjustmentsPage(
         Number(page) || 1,
@@ -63,7 +66,7 @@ export const getAttendanceAdjustmentsController = async (
       );
     }
 
-    // Lấy tất cả
+    // Lấy tất cả (không phân trang)
     const adjustments = await getAllAttendanceAdjustments();
     return res.json(
       ResultResponse(true, 200, null, null, adjustments, adjustments.length)
@@ -499,6 +502,110 @@ export const getAdjustmentApprovalImpactController = async (
 };
 
 // ==============================
+// GET /attendance-adjustments/stats
+// ==============================
+export const getAdjustmentStatsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const stats = await getAdjustmentStats();
+    return res.json(ResultResponse(true, 200, null, null, stats));
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+// ==============================
+// POST /attendance-adjustments/:id/rollback
+// Rollback khẩn cấp (chỉ dùng khi có lỗi)
+// ==============================
+export const rollbackAttendanceAdjustmentController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = Number(req.params.id);
+    const success = await rollbackAdjustment(id);
+
+    if (!success) {
+      return res
+        .status(400)
+        .json(
+          ResultResponse(
+            false,
+            400,
+            "Không thể rollback. Có thể bản ghi không tồn tại hoặc chưa được phê duyệt"
+          )
+        );
+    }
+
+    return res.json(
+      ResultResponse(
+        true,
+        200,
+        null,
+        "Rollback thành công. Bản ghi đã được chuyển về trạng thái chờ duyệt"
+      )
+    );
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+// ==============================
+// GET /attendance-adjustments/export
+// ==============================
+export const exportAttendanceAdjustmentsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { employeeId, status, startDate, endDate, adjustmentType } =
+      req.query;
+
+    // Lấy tất cả dữ liệu không phân trang
+    const adjustments = await getAllAttendanceAdjustments();
+
+    // Format dữ liệu cho export
+    const exportData = adjustments.map((adj) => ({
+      "Mã NV": adj.employee?.employeeCode || `NV${adj.employeeId}`,
+      "Tên NV": adj.employee?.fullName || `Nhân viên ${adj.employeeId}`,
+      "Ngày điều chỉnh": adj.adjustmentDate,
+      "Giờ ban đầu": adj.originalHours,
+      "Giờ điều chỉnh": adj.adjustedHours,
+      "Loại điều chỉnh": adj.adjustmentType,
+      "Lý do": adj.reason,
+      "Trạng thái": adj.status,
+      "Người duyệt": adj.approver?.fullName || "Chưa duyệt",
+      "Ngày duyệt": adj.approvedAt || "Chưa duyệt",
+      "Ghi chú": adj.reviewNote || "",
+    }));
+
+    // Set headers cho file download
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=danh-sach-dieu-chinh-cong.xlsx"
+    );
+
+    // Trong thực tế, bạn có thể dùng thư viện như exceljs để tạo file Excel
+    // Ở đây trả về JSON, frontend sẽ xử lý export
+    return res.json(
+      ResultResponse(true, 200, null, "Dữ liệu export", exportData)
+    );
+  } catch (err: any) {
+    next(err);
+  }
+};
+
+// ==============================
 // 🧮 HÀM TÍNH TOÁN ẢNH HƯỞNG
 // ==============================
 const calculateApprovalImpact = (adjustment: any) => {
@@ -540,4 +647,72 @@ const calculateAttendanceStatus = (hours: number): string => {
   if (hours >= 8) return "present";
   if (hours >= 4) return "half_day";
   return "absent";
+};
+
+// ==============================
+// Middleware validation cho create
+// ==============================
+export const validateCreateAdjustment = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { employeeId, adjustmentDate, adjustmentType, reason, requestedBy } =
+    req.body;
+
+  const errors: string[] = [];
+
+  if (!employeeId) errors.push("employeeId là bắt buộc");
+  if (!adjustmentDate) errors.push("adjustmentDate là bắt buộc");
+  if (!adjustmentType) errors.push("adjustmentType là bắt buộc");
+  if (!reason) errors.push("reason là bắt buộc");
+  if (!requestedBy) errors.push("requestedBy là bắt buộc");
+
+  // Validate date format
+  if (adjustmentDate) {
+    const date = new Date(adjustmentDate);
+    if (isNaN(date.getTime())) {
+      errors.push("adjustmentDate không đúng định dạng");
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json(ResultResponse(false, 400, errors.join(", ")));
+  }
+
+  next();
+};
+
+// ==============================
+// Middleware validation cho bulk actions
+// ==============================
+export const validateBulkAction = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { ids, approverId } = req.body;
+
+  const errors: string[] = [];
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    errors.push("Danh sách IDs là bắt buộc và phải là mảng không rỗng");
+  }
+
+  if (!approverId) {
+    errors.push("approverId là bắt buộc");
+  }
+
+  if (ids && Array.isArray(ids)) {
+    const invalidIds = ids.filter((id) => typeof id !== "number" || id <= 0);
+    if (invalidIds.length > 0) {
+      errors.push(`Có ID không hợp lệ: ${invalidIds.join(", ")}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json(ResultResponse(false, 400, errors.join("; ")));
+  }
+
+  next();
 };

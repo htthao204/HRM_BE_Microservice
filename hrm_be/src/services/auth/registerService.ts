@@ -1,12 +1,18 @@
 import type { AccountRequest } from "../../dto/request/accountRequest";
 import Account from "../../models/accountModel";
 import bcrypt from "bcryptjs";
-
-export const registerAccount = async (accountRequest: AccountRequest) => {
+// Sửa hàm registerAccount để hỗ trợ transaction
+export const registerAccount = async (
+  accountRequest: AccountRequest,
+  transaction?: any
+) => {
   const { username, password, roleId } = accountRequest;
 
   // 1. Kiểm tra username đã tồn tại chưa
-  const existingAccount = await Account.findOne({ where: { username } });
+  const existingAccount = await Account.findOne({
+    where: { username },
+    transaction,
+  });
   if (existingAccount) {
     throw new Error("username already exists");
   }
@@ -18,11 +24,14 @@ export const registerAccount = async (accountRequest: AccountRequest) => {
   const role_id_value = roleId || 1;
 
   // 4. Tạo Account mới
-  const newAccount = await Account.create({
-    username,
-    password: hashedPassword,
-    roleId: role_id_value,
-  });
+  const newAccount = await Account.create(
+    {
+      username,
+      password: hashedPassword,
+      roleId: role_id_value,
+    },
+    { transaction }
+  );
 
   // 5. Trả về Account
   return newAccount;

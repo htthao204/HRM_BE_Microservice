@@ -9,11 +9,12 @@ from routes.attendance_summary_router import attendance_summary_bp
 from routes.recognition_router import recognition_bp
 from routes.dataset_router import face_dataset_bp
 from routes.face_training_router import face_training_bp
+from routes.face_recognition_routes import face_recognition_bp
 
 def create_app():
     app = Flask(__name__)
-    
-    # CORS
+
+    # --- CORS setup ---
     CORS(
         app,
         origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
@@ -22,14 +23,16 @@ def create_app():
         allow_headers=["Content-Type", "Authorization"]
     )
 
-    # REGISTER BLUEPRINTS
+    # --- REGISTER BLUEPRINTS ---
     app.register_blueprint(recognition_bp, url_prefix="/api/recognition/attendance")
     app.register_blueprint(attendance_log_bp, url_prefix="/api/recognition/attendance")
     app.register_blueprint(attendance_summary_bp, url_prefix="/api/recognition/attendance")
     app.register_blueprint(attendance_calendar_bp, url_prefix="/api/recognition/attendance")
     app.register_blueprint(face_dataset_bp, url_prefix="/api/recognition/attendance")
     app.register_blueprint(face_training_bp, url_prefix="/api/recognition/attendance")
+    app.register_blueprint(face_recognition_bp, url_prefix="/api/recognition")
 
+    # --- HEALTH CHECK ENDPOINTS ---
     @app.route("/")
     def home():
         return {"status": "running", "service": "face-recognition-api"}
@@ -49,15 +52,18 @@ def create_app():
 
     return app
 
-# --- INIT APP & SOCKET ---
-app = create_app()
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
-
-# Register Socket.IO namespace
-socketio.on_namespace(RealtimeRecognitionNamespace("/realtime"))
-
-# --- RUN SERVER ---
+# -------------------------------------------------
+# MAIN ENTRY POINT
+# -------------------------------------------------
 if __name__ == "__main__":
+    # --- CREATE APP ---
+    app = create_app()
+
+    # --- INIT SOCKETIO ONCE ---
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+    socketio.on_namespace(RealtimeRecognitionNamespace("/realtime"))
+
+    # --- PRINT INFO ---
     print("🚀 Starting Flask Face Recognition API with SocketIO on port 5002...")
     print("📡 Available endpoints:")
     print("   - http://localhost:5002/api/recognition/attendance")
@@ -67,4 +73,5 @@ if __name__ == "__main__":
     print("   - http://localhost:5002/api/recognition/attendance/calendar")
     print("   - http://localhost:5002/health")
     print("🔌 Socket.IO namespace: /realtime")
-    socketio.run(app, host="0.0.0.0", port=5002, debug=True)
+
+    socketio.run(app, host="0.0.0.0", port=5002, debug=True, use_reloader=False)

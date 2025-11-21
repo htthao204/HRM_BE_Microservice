@@ -25,21 +25,24 @@ def get_attendance_history():
         if result["success"]:
             return jsonify({
                 "success": True,
-                "data": {
-                    "records": result["records"],
-                    "total_count": result["total_count"],
-                    "page": result["page"],
-                    "page_size": result["page_size"],
-                    "total_pages": result["total_pages"]
-                },
+                "data": result,  # ✅ hoặc "records": result["records"] nếu muốn chỉ danh sách
                 "timestamp": datetime.now().isoformat()
             })
+
         else:
-            return jsonify({"success": False, "message": result["message"]}), 500
+            return jsonify({
+                "success": False, 
+                "message": result.get("message", "Lỗi không xác định"),
+                "timestamp": datetime.now().isoformat()
+            }), 400
             
     except Exception as e:
         print(f"❌ Lỗi router lấy lịch sử điểm danh: {str(e)}")
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({
+            "success": False, 
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
 
 @attendance_log_bp.route("/status/<int:employee_id>", methods=["GET", "OPTIONS"])
 def get_attendance_status(employee_id):

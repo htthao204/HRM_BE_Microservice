@@ -14,9 +14,17 @@ import {
   approveAttendanceAdjustmentWithTransactionController,
   bulkApproveAttendanceAdjustmentsWithTransactionController,
   getAdjustmentApprovalImpactController,
+  getAdjustmentStatsController,
+  rollbackAttendanceAdjustmentController,
+  exportAttendanceAdjustmentsController,
+  validateCreateAdjustment,
+  validateBulkAction,
 } from "../controllers/attendanceAdjustmentController";
 
 const attendanceAdjustmentRouters = express.Router();
+
+// 🔹 GET ROUTES
+// ==============================
 
 // Lấy danh sách adjustments (có phân trang + filter)
 attendanceAdjustmentRouters.get("/", getAttendanceAdjustmentsController);
@@ -30,11 +38,24 @@ attendanceAdjustmentRouters.get(
   getAdjustmentApprovalImpactController
 );
 
+// Lấy thống kê adjustments
+attendanceAdjustmentRouters.get("/stats/all", getAdjustmentStatsController);
+
+// Export dữ liệu adjustments
+attendanceAdjustmentRouters.get(
+  "/export/data",
+  exportAttendanceAdjustmentsController
+);
+
 // 🔹 POST ROUTES
 // ==============================
 
 // Tạo mới adjustment
-attendanceAdjustmentRouters.post("/", createAttendanceAdjustmentController);
+attendanceAdjustmentRouters.post(
+  "/",
+  validateCreateAdjustment,
+  createAttendanceAdjustmentController
+);
 
 // Phê duyệt adjustment (đơn giản)
 attendanceAdjustmentRouters.post(
@@ -54,27 +75,36 @@ attendanceAdjustmentRouters.post(
   rejectAttendanceAdjustmentController
 );
 
+// Rollback adjustment (khẩn cấp)
+attendanceAdjustmentRouters.post(
+  "/:id/rollback",
+  rollbackAttendanceAdjustmentController
+);
+
 // Phê duyệt hàng loạt (đơn giản)
 attendanceAdjustmentRouters.post(
-  "/bulk-approve",
+  "/bulk/approve",
+  validateBulkAction,
   bulkApproveAttendanceAdjustmentsController
 );
 
 // Phê duyệt hàng loạt với transaction
 attendanceAdjustmentRouters.post(
-  "/bulk-approve-with-transaction",
+  "/bulk/approve-with-transaction",
+  validateBulkAction,
   bulkApproveAttendanceAdjustmentsWithTransactionController
 );
 
 // Từ chối hàng loạt
 attendanceAdjustmentRouters.post(
-  "/bulk-reject",
+  "/bulk/reject",
+  validateBulkAction,
   bulkRejectAttendanceAdjustmentsController
 );
 
 // Xóa hàng loạt
 attendanceAdjustmentRouters.post(
-  "/bulk-delete",
+  "/bulk/delete",
   bulkDeleteAttendanceAdjustmentsController
 );
 

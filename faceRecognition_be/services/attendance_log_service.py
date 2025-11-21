@@ -5,16 +5,23 @@ import psycopg2
 from psycopg2.extras import DictCursor
 
 class AttendanceLogService:
+    
+    # Thêm constants cho giới hạn
+    MAX_ATTENDANCE_PER_DAY = 10  # Tối đa 10 lần điểm danh/ngày
+    MINUTES_BETWEEN_SAME_ACTION = 5  # 5 phút chờ giữa cùng action
+    MAX_SWITCHES_PER_DAY = 6  # Tối đa 6 lần chuyển đổi CHECKIN/CHECKOUT
+
     @staticmethod
     def log_attendance(employee_id, action="CHECKIN", source="FACE_RECOGNITION", status="SUCCESS", location=None):
         """
-        Ghi log điểm danh vào bảng attendance_logs
+        Ghi log điểm danh vào bảng attendance_logs với các giới hạn
         """
         conn = get_connection()
         cursor = conn.cursor(cursor_factory=DictCursor)
 
         now = datetime.now()
         now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        today = now.strftime("%Y-%m-%d")
 
         valid_sources = ['DEVICE', 'FACE_RECOGNITION', 'MANUAL', 'MOBILE']
         
@@ -24,7 +31,52 @@ class AttendanceLogService:
 
         print(f"🔧 Using valid source: {source} for employee {employee_id}")
 
-        # Kiểm tra log gần nhất trong ngày
+        # 1. KIỂM TRA TỔNG SỐ LẦN ĐIỂM DANH TRONG NGÀY
+        cursor.execute("""
+            SELECT COUNT(*) as today_count 
+            FROM attendance_logs 
+            WHERE employee_id = %s AND DATE(log_time) = CURRENT_DATE
+        """, (employee_id,))
+        
+        today_count_result = cursor.fetchone()
+        today_count = today_count_result["today_count"] if today_count_result else 0
+        
+        if today_count >= AttendanceLogService.MAX_ATTENDANCE_PER_DAY:
+            cursor.close()
+            conn.close()
+            return {
+                "success": False,
+                "error": "daily_limit_exceeded",
+                "message": f"Bạn đã điểm danh {today_count} lần hôm nay. Giới hạn tối đa là {AttendanceLogService.MAX_ATTENDANCE_PER_DAY} lần/ngày."
+            }
+
+        # 2. KIỂM TRA SỐ LẦN CHUYỂN ĐỔI CHECKIN/CHECKOUT
+        cursor.execute("""
+            SELECT action, COUNT(*) as switch_count
+            FROM (
+                SELECT action, 
+                       LAG(action) OVER (ORDER BY log_time) as prev_action
+                FROM attendance_logs 
+                WHERE employee_id = %s AND DATE(log_time) = CURRENT_DATE
+                ORDER BY log_time
+            ) as switches
+            WHERE action != prev_action OR prev_action IS NULL
+            GROUP BY action
+        """, (employee_id,))
+        
+        switch_results = cursor.fetchall()
+        total_switches = sum(result["switch_count"] for result in switch_results)
+        
+        if total_switches >= AttendanceLogService.MAX_SWITCHES_PER_DAY:
+            cursor.close()
+            conn.close()
+            return {
+                "success": False,
+                "error": "switch_limit_exceeded",
+                "message": f"Bạn đã chuyển đổi CHECKIN/CHECKOUT {total_switches} lần hôm nay. Giới hạn tối đa là {AttendanceLogService.MAX_SWITCHES_PER_DAY} lần/ngày."
+            }
+
+        # 3. KIỂM TRA LOG GẦN NHẤT (giữ nguyên logic cũ)
         cursor.execute("""
             SELECT log_time, action FROM attendance_logs
             WHERE employee_id = %s AND DATE(log_time) = CURRENT_DATE
@@ -34,6 +86,8 @@ class AttendanceLogService:
         last_log = cursor.fetchone()
 
         should_log = False
+        remaining_minutes = 0
+        
         if not last_log:
             should_log = True
         else:
@@ -42,8 +96,14 @@ class AttendanceLogService:
             
             if action != last_action:
                 should_log = True
-            elif now - last_time >= timedelta(minutes=5):
-                should_log = True
+            else:
+                time_diff = now - last_time
+                remaining_minutes = max(0, AttendanceLogService.MINUTES_BETWEEN_SAME_ACTION - (time_diff.total_seconds() / 60))
+                
+                if time_diff >= timedelta(minutes=AttendanceLogService.MINUTES_BETWEEN_SAME_ACTION):
+                    should_log = True
+                else:
+                    print(f"⏸ Bỏ qua log {action} (chưa đủ {AttendanceLogService.MINUTES_BETWEEN_SAME_ACTION} phút cho {employee_id}, còn {remaining_minutes:.1f} phút)")
 
         if should_log:
             query = """
@@ -57,18 +117,36 @@ class AttendanceLogService:
                 
                 cursor.close()
                 conn.close()
-                return True
+                return {
+                    "success": True,
+                    "action": action,
+                    "timestamp": now_str,
+                    "today_count": today_count + 1,
+                    "remaining_today": AttendanceLogService.MAX_ATTENDANCE_PER_DAY - (today_count + 1)
+                }
             except Exception as e:
                 print(f"❌ Lỗi database khi ghi log: {str(e)}")
                 conn.rollback()
                 cursor.close()
                 conn.close()
-                return False
+                return {
+                    "success": False,
+                    "error": f"Lỗi database: {str(e)}"
+                }
         else:
-            print(f"⏸ Bỏ qua log {action} (chưa đủ 5 phút cho {employee_id})")
+            last_time_str = last_log["log_time"].strftime("%H:%M:%S") if last_log else "N/A"
+            print(f"⏸ Bỏ qua log {action} (chưa đủ {AttendanceLogService.MINUTES_BETWEEN_SAME_ACTION} phút cho {employee_id})")
             cursor.close()
             conn.close()
-            return False
+            return {
+                "success": False,
+                "error": "attendance_cooldown",
+                "message": f"Bạn vừa điểm danh {last_log['action']} lúc {last_time_str}. Vui lòng chờ thêm {remaining_minutes:.1f} phút trước khi điểm danh {action} tiếp theo.",
+                "last_action": last_log["action"] if last_log else None,
+                "last_time": last_time_str,
+                "remaining_minutes": remaining_minutes,
+                "next_available_time": (last_log["log_time"] + timedelta(minutes=AttendanceLogService.MINUTES_BETWEEN_SAME_ACTION)).strftime("%H:%M:%S") if last_log else None
+            }
 
     @staticmethod
     def mark_attendance(employee_id, action="CHECKIN", source="FACE_RECOGNITION", location=None):
@@ -81,21 +159,48 @@ class AttendanceLogService:
                 action = AttendanceLogService.determine_attendance_action(employee_id)
             
             # Ghi log điểm danh
-            success = AttendanceLogService.log_attendance(employee_id, action, source, "SUCCESS", location)
+            result = AttendanceLogService.log_attendance(employee_id, action, source, "SUCCESS", location)
             
-            if success:
+            if result["success"]:
                 return {
                     "success": True,
                     "action": action,
                     "employee_id": employee_id,
-                    "timestamp": datetime.now().isoformat(),
-                    "message": f"Điểm danh {action} thành công"
+                    "timestamp": result["timestamp"],
+                    "today_count": result["today_count"],
+                    "remaining_today": result["remaining_today"],
+                    "message": f"Điểm danh {action} thành công lúc {result['timestamp']} ({result['today_count']}/{AttendanceLogService.MAX_ATTENDANCE_PER_DAY} lần hôm nay)"
                 }
             else:
-                return {
-                    "success": False,
-                    "message": f"Thao tác {action} bị từ chối (chưa đủ thời gian)"
-                }
+                # Xử lý các loại lỗi
+                error_type = result.get("error")
+                if error_type == "attendance_cooldown":
+                    return {
+                        "success": False,
+                        "error": "attendance_cooldown",
+                        "message": result["message"],
+                        "last_action": result.get("last_action"),
+                        "last_time": result.get("last_time"),
+                        "remaining_minutes": result.get("remaining_minutes"),
+                        "next_available_time": result.get("next_available_time")
+                    }
+                elif error_type == "daily_limit_exceeded":
+                    return {
+                        "success": False,
+                        "error": "daily_limit_exceeded",
+                        "message": result["message"]
+                    }
+                elif error_type == "switch_limit_exceeded":
+                    return {
+                        "success": False,
+                        "error": "switch_limit_exceeded", 
+                        "message": result["message"]
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": result.get("error", "Lỗi khi điểm danh")
+                    }
                 
         except Exception as e:
             print(f"❌ Lỗi mark_attendance: {str(e)}")
@@ -104,64 +209,7 @@ class AttendanceLogService:
                 "message": f"Lỗi hệ thống: {str(e)}"
             }
 
-    @staticmethod
-    def determine_attendance_action(employee_id):
-        """
-        Xác định nên checkin hay checkout dựa trên log gần nhất
-        """
-        try:
-            conn = get_connection()
-            cursor = conn.cursor(cursor_factory=DictCursor)
-            
-            cursor.execute("""
-                SELECT action FROM attendance_logs 
-                WHERE employee_id = %s AND DATE(log_time) = CURRENT_DATE
-                ORDER BY log_time DESC 
-                LIMIT 1
-            """, (employee_id,))
-            
-            last_log = cursor.fetchone()
-            cursor.close()
-            conn.close()
-            
-            if not last_log or last_log["action"] == "CHECKOUT":
-                return "CHECKIN"
-            else:
-                return "CHECKOUT"
-                
-        except Exception as e:
-            print(f"⚠️ Lỗi xác định action: {str(e)}")
-            return "CHECKIN"
-
-    @staticmethod
-    def get_attendance_status(employee_id):
-        """
-        Kiểm tra trạng thái điểm danh hiện tại
-        """
-        conn = get_connection()
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        
-        cursor.execute("""
-            SELECT action, log_time, source, status
-            FROM attendance_logs 
-            WHERE employee_id = %s AND DATE(log_time) = CURRENT_DATE
-            ORDER BY log_time DESC 
-            LIMIT 1
-        """, (employee_id,))
-        
-        last_log = cursor.fetchone()
-        
-        cursor.close()
-        conn.close()
-        
-        return {
-            "last_action": last_log["action"] if last_log else None,
-            "last_log_time": last_log["log_time"].isoformat() if last_log else None,
-            "source": last_log["source"] if last_log else None,
-            "status": last_log["status"] if last_log else None,
-            "next_action": "CHECKIN" if not last_log or last_log["action"] == "CHECKOUT" else "CHECKOUT"
-        }
-
+   
     @staticmethod
     def get_attendance_history(filters):
         """
@@ -180,7 +228,7 @@ class AttendanceLogService:
             offset = (page - 1) * page_size
             
             conn = get_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=DictCursor)  # Sửa thành DictCursor
             
             # Build query
             query = """
@@ -217,8 +265,9 @@ class AttendanceLogService:
                 query += " AND DATE(al.log_time) BETWEEN %s AND %s"
                 params.extend([start_date, end_date])
             elif date:
-                query += " AND DATE(al.log_time) = %s"
-                params.append(date)
+                query += " AND al.log_time >= %s AND al.log_time < (%s::date + INTERVAL '1 day')"
+                params.extend([date, date])
+
                 
             if status:
                 status_mapping_to_db = {
@@ -231,15 +280,19 @@ class AttendanceLogService:
                 query += " AND al.status = %s"
                 params.append(db_status)
                 
-            # Count total records
-            count_query = "SELECT COUNT(*) FROM (" + query + ") as count_table"
-            cursor.execute(count_query, params)
-            total_count = cursor.fetchone()[0]
+            # SỬA LẠI PHẦN ĐẾM RECORDS - TÁCH RIÊNG
+            count_query = "SELECT COUNT(*) as total FROM (" + query + ") as count_table"
             
-            # Add pagination
+            # Thực hiện count query với params
+            cursor.execute(count_query, params)
+            count_result = cursor.fetchone()
+            total_count = count_result['total'] if count_result else 0
+            
+            # Add pagination cho main query
             query += " ORDER BY al.log_time DESC LIMIT %s OFFSET %s"
             params.extend([page_size, offset])
             
+            # Thực hiện main query
             cursor.execute(query, params)
             records = cursor.fetchall()
             
@@ -253,23 +306,23 @@ class AttendanceLogService:
                     'EARLY': 'early_leave'
                 }
                 
-                frontend_status = status_mapping_to_frontend.get(record[8], record[8])
+                frontend_status = status_mapping_to_frontend.get(record['status'], record['status'])
                 
                 formatted_records.append({
-                    "id": record[0],
-                    "employee_id": record[1],
-                    "employee_code": record[2],
-                    "name": record[3],
-                    "timestamp": record[4].isoformat(),
-                    "date": record[5].isoformat(),
-                    "time": str(record[6]),
-                    "action": record[7],
+                    "id": record['id'],
+                    "employee_id": record['employee_id'],
+                    "employee_code": record['employee_code'],
+                    "name": record['name'],
+                    "timestamp": record['timestamp'].isoformat() if record['timestamp'] else None,
+                    "date": record['date'].isoformat() if record['date'] else None,
+                    "time": str(record['time']),
+                    "action": record['action'],
                     "status": frontend_status,
-                    "location": record[9],
-                    "device_id": record[10],
-                    "source": record[11],
-                    "notes": record[12],
-                    "created_at": record[13].isoformat() if record[13] else None,
+                    "location": record['location'],
+                    "device_id": record['device_id'],
+                    "source": record['source'],
+                    "notes": record['notes'],
+                    "created_at": record['created_at'].isoformat() if record['created_at'] else None,
                     "confidence": 95.0
                 })
             
@@ -291,3 +344,4 @@ class AttendanceLogService:
                 "success": False,
                 "message": str(e)
             }
+    

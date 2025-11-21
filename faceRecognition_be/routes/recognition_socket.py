@@ -1,83 +1,126 @@
-# routes/recognition_socket.py
 from flask_socketio import Namespace, emit
-import cv2
-import numpy as np
+from flask import request
+from services.attendance_log_service import AttendanceLogService
+from services.real_time_recognition import recognition_realtime
+from datetime import datetime
 import base64
-from services.realtime_recognition import recognize_from_frame
+import numpy as np
+import cv2
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RealtimeRecognitionNamespace(Namespace):
     def on_connect(self):
-        print(f"✅ Client connected to realtime namespace: {self.namespace}")
-        emit('connection_status', {
-            'status': 'connected', 
-            'message': 'Connected to realtime recognition service'
+        logger.info(f"✅ Client connected to realtime namespace: {self.namespace}")
+        emit("connected", {
+            "success": True,
+            "message": "Connected to real-time recognition",
+            "timestamp": datetime.now().isoformat()
         })
 
     def on_disconnect(self):
-        print(f"❌ Client disconnected from realtime namespace: {self.namespace}")
+        logger.info(f"🔴 Client disconnected from realtime namespace: {self.namespace}")
 
-    def on_start_recognition(self, data):
-        """Bắt đầu realtime recognition"""
-        employee_id = data.get('employee_id')
-        print(f"🎥 Starting realtime recognition for employee {employee_id}")
-        
-        emit('recognition_status', {
-            'status': 'started',
-            'message': 'Realtime face recognition started',
-            'employee_id': employee_id
-        })
-
-    def on_stop_recognition(self, data):
-        """Dừng realtime recognition"""
-        print(f"⏹️ Stopping realtime recognition")
-        emit('recognition_status', {
-            'status': 'stopped',
-            'message': 'Realtime recognition stopped'
-        })
-
-    def on_frame(self, data):
-        """Xử lý frame từ client - REALTIME"""
+    def on_send_frame(self, data):
         try:
             employee_id = data.get("employee_id")
-            image_base64 = data.get("image")
-            
-            if not image_base64:
-                emit('frame_error', {'error': 'No image data'})
+            image_data = data.get("image")
+
+            if not employee_id or not image_data:
+                emit("recognition_result", {
+                    "success": False,
+                    "error": "Missing employee_id or image",
+                    "timestamp": datetime.now().isoformat()
+                })
                 return
 
-            # Remove data URL prefix if present
-            if ',' in image_base64:
-                image_base64 = image_base64.split(',')[1]
-            
-            # Decode base64 to image
-            img_bytes = base64.b64decode(image_base64)
-            np_arr = np.frombuffer(img_bytes, np.uint8)
-            frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            # logger.info(f"🎥 Processing real-time frame for employee {employee_id}")
 
-            if frame is None:
-                emit('frame_error', {'error': 'Invalid image data'})
-                return
+            result = recognition_realtime(image_data, employee_id)
+            
+            result["socket_id"] = request.sid
+            
+            emit("recognition_result", result)
+            
+            # logger.info(f"📤 Sent recognition result: {result.get('success')}")
 
-            # Nhận diện khuôn mặt
-            result = recognize_from_frame(frame, employee_id)
-            
-            # Gửi kết quả về client
-            emit('frame_result', result)
-            
-            # Gửi kết quả điểm danh nếu thành công
-            if result.get('success') and result.get('recognized_count', 0) > 0:
-                for face in result.get('recognized_faces', []):
-                    if face.get('attendance_status') == 'success':
-                        emit('attendance_result', {
-                            'employee_id': face['employee_id'],
-                            'employee_code': face['employee_code'],
-                            'name': face['name'],
-                            'confidence': face['confidence'],
-                            'timestamp': face['timestamp'],
-                            'message': face.get('attendance_message', 'Điểm danh thành công'),
-                            'action': face.get('action', 'CHECKIN')
-                        })
-                        
         except Exception as e:
-            print(f"❌ Error processing frame: {str(e)}")
-            emit('frame_error', {'error': str(e)})
+            logger.error(f"❌ Socket.IO recognition error: {str(e)}")
+            emit("recognition_result", {
+                "success": False,
+                "error": f"Recognition error: {str(e)}",
+                "timestamp": datetime.now().isoformat(),
+                "socket_id": request.sid
+            })
+
+    def on_start_recognition(self, data):
+        try:
+            employee_id = data.get("employee_id")
+            if not employee_id:
+                emit("session_started", {
+                    "success": False,
+                    "error": "Missing employee_id",
+                    "timestamp": datetime.now().isoformat()
+                })
+                return
+                
+            logger.info(f"🚀 Starting realtime recognition for employee {employee_id}")
+            
+            emit("session_started", {
+                "success": True,
+                "message": "Real-time recognition session started",
+                "employee_id": employee_id,
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            logger.error(f"❌ Error starting recognition: {str(e)}")
+            emit("session_started", {
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            })
+
+    def on_stop_recognition(self, data=None):
+        try:
+            logger.info(f"🛑 Stopping recognition session: {request.sid}")
+            
+            employee_id = None
+            if data and isinstance(data, dict):
+                employee_id = data.get('employee_id')
+                if employee_id:
+                    logger.info(f"Stopping recognition for employee: {employee_id}")
+            
+            emit("session_stopped", {
+                "success": True,
+                "message": "Real-time recognition session stopped",
+                "employee_id": employee_id,
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            logger.error(f"❌ Error stopping recognition: {str(e)}")
+            emit("session_stopped", {
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            })
+
+    def on_get_status(self, data=None):
+        try:
+            logger.info(f"📊 Status request from client: {request.sid}")
+            
+            emit("status_update", {
+                "success": True,
+                "status": "active",
+                "connected": True,
+                "namespace": self.namespace,
+                "socket_id": request.sid,
+                "timestamp": datetime.now().isoformat()
+            })
+        except Exception as e:
+            logger.error(f"❌ Error getting status: {str(e)}")
+            emit("status_update", {
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            })

@@ -9,6 +9,7 @@ import EmployeeInformation, {
 import Department from "../models/departmentModel";
 import Position from "../models/positionModel";
 import Account from "../models/accountModel";
+import { registerAccount } from "./auth/registerService";
 
 export interface PaginatedResult<T> {
   totalItems: number;
@@ -242,7 +243,6 @@ export const getEmployeeJobInfo = async (id: number) => {
   if (!employee) throw new Error("Không tìm thấy nhân viên");
   return employee.get({ plain: true });
 };
-
 // ===============================
 // 🔹 5. Tạo nhân viên mới
 // ===============================
@@ -261,21 +261,52 @@ export const createEmployee = async (employeeData: any) => {
       nextCode = `NV${String(num + 1).padStart(4, "0")}`;
     }
 
-    // 1️⃣ Tạo thông tin nhân viên
+    let accountId = null;
+    if (employeeData.email) {
+      const username = employeeData.email;
+      const defaultPassword = "123456";
+
+      // ✅ SỬA: Nếu không truyền roleId thì mặc định là 5, còn không thì lấy giá trị truyền vào
+      const roleId =
+        employeeData.roleId !== undefined ? employeeData.roleId : 5;
+
+      const accountRequest = {
+        username,
+        password: defaultPassword,
+        roleId: roleId, // ✅ Dùng roleId đã xử lý
+      };
+
+      const newAccount = await registerAccount(accountRequest, t);
+      accountId = newAccount.id;
+
+      console.log(
+        `✅ Đã tạo account tự động: ${username} / 123456 / Role: ${roleId}`
+      );
+    }
+
+    // ✅ 2. Tạo thông tin nhân viên (liên kết với account qua accountId)
+    // Loại bỏ roleId khỏi employeeData trước khi tạo employee
+    const { roleId, ...employeeDataWithoutRoleId } = employeeData;
+
     const newEmployee = await EmployeeInformation.create(
-      { ...employeeData, employeeCode: nextCode },
+      {
+        ...employeeDataWithoutRoleId, // ✅ Dùng data đã loại bỏ roleId
+        employeeCode: nextCode,
+        accountId: accountId,
+      },
       { transaction: t }
     );
 
-    // 2️⃣ Thông tin riêng tư
-    if (employeeData.privateInfo)
+    // 3️⃣ Thông tin riêng tư
+    if (employeeData.privateInfo) {
       await EmployeePrivateInformation.create(
         { ...employeeData.privateInfo, employeeId: newEmployee.id },
         { transaction: t }
       );
+    }
 
-    // 3️⃣ Tài khoản ngân hàng
-    if (employeeData.bankAccounts?.length)
+    // 4️⃣ Tài khoản ngân hàng
+    if (employeeData.bankAccounts?.length) {
       await EmployeeBankAccount.bulkCreate(
         employeeData.bankAccounts.map((b: any) => ({
           ...b,
@@ -283,9 +314,10 @@ export const createEmployee = async (employeeData: any) => {
         })),
         { transaction: t }
       );
+    }
 
-    // 4️⃣ Người phụ thuộc
-    if (employeeData.dependents?.length)
+    // 5️⃣ Người phụ thuộc
+    if (employeeData.dependents?.length) {
       await EmployeeDependent.bulkCreate(
         employeeData.dependents.map((d: any) => ({
           ...d,
@@ -293,20 +325,32 @@ export const createEmployee = async (employeeData: any) => {
         })),
         { transaction: t }
       );
+    }
 
     await t.commit();
+
     return {
       success: true,
-      message: "Tạo nhân viên thành công",
+      message: accountId
+        ? "Tạo nhân viên và tài khoản thành công"
+        : "Tạo nhân viên thành công (chưa có tài khoản)",
       id: newEmployee.id,
+      employeeCode: nextCode,
+      accountId: accountId,
+      accountInfo: accountId
+        ? {
+            username: employeeData.email,
+            defaultPassword: "123456",
+            roleId: employeeData.roleId !== undefined ? employeeData.roleId : 5, // ✅ Hiển thị roleId thực tế
+          }
+        : null,
     };
   } catch (error) {
     await t.rollback();
-    console.error(error);
-    throw new Error("Tạo nhân viên thất bại");
+    console.error("❌ Lỗi tạo nhân viên:", error);
+    throw new Error("Tạo nhân viên thất bại: " + (error as Error).message);
   }
 };
-
 // ===============================
 // 🔹 6. Cập nhật nhân viên - ĐÃ THÊM AVATAR
 // ===============================

@@ -5,11 +5,16 @@ from services.recognize_from_image import recognize_from_image
 from datetime import datetime
 from config.db import get_connection
 from psycopg2.extras import RealDictCursor
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 recognition_bp = Blueprint("recognition", __name__)
 
 @recognition_bp.route("/recognize_from_image", methods=["POST", "OPTIONS"])
 def recognize_from_image_api():
-    """Nhận diện khuôn mặt từ ảnh upload"""
+    """Nhận diện khuôn mặt từ ảnh upload (multipart/form-data)"""
     if request.method == "OPTIONS":
         return jsonify({"success": True}), 200
         
@@ -47,7 +52,7 @@ def recognize_from_image_api():
                 "error": "File ảnh quá lớn. Kích thước tối đa là 5MB"
             }), 400
 
-        print(f"🖼️ Nhận ảnh từ {file.filename}, kích thước: {len(image_data)} bytes")
+        logger.info(f"🖼️ Nhận ảnh từ {file.filename}, kích thước: {len(image_data)} bytes, employee_id: {employee_id}")
         
         # Gọi service nhận diện
         result = recognize_from_image(image_data, employee_id)
@@ -55,11 +60,59 @@ def recognize_from_image_api():
         return jsonify({
             "success": result["success"],
             "data": result,
-            "message": "Nhận diện khuôn mặt thành công" if result["success"] else result.get("error", "Lỗi nhận diện")
+            "message": result.get("message", "Nhận diện khuôn mặt thành công") if result["success"] else result.get("error", "Lỗi nhận diện")
         })
 
     except Exception as e:
-        print(f"❌ Lỗi endpoint nhận diện từ ảnh: {str(e)}")
+        logger.error(f"❌ Lỗi endpoint nhận diện từ ảnh: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Lỗi server: {str(e)}"
+        }), 500
+
+@recognition_bp.route("/recognize_from_base64", methods=["POST", "OPTIONS"])
+def recognize_from_base64_api():
+    """Nhận diện khuôn mặt từ ảnh base64 (JSON)"""
+    if request.method == "OPTIONS":
+        return jsonify({"success": True}), 200
+        
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "Không có dữ liệu JSON"
+            }), 400
+
+        # Lấy base64 image và employee_id
+        image_data = data.get("image")
+        employee_id = data.get("employee_id")
+
+        if not image_data:
+            return jsonify({
+                "success": False,
+                "error": "Thiếu trường 'image' (base64)"
+            }), 400
+
+        if not employee_id:
+            return jsonify({
+                "success": False,
+                "error": "Thiếu trường 'employee_id'"
+            }), 400
+
+        logger.info(f"🖼️ Nhận ảnh base64, employee_id: {employee_id}")
+
+        # Gọi service nhận diện
+        result = recognize_from_image(image_data, employee_id)
+        
+        return jsonify({
+            "success": result["success"],
+            "data": result,
+            "message": result.get("message", "Nhận diện khuôn mặt thành công") if result["success"] else result.get("error", "Lỗi nhận diện")
+        })
+
+    except Exception as e:
+        logger.error(f"❌ Lỗi endpoint nhận diện từ base64: {str(e)}")
         return jsonify({
             "success": False,
             "error": f"Lỗi server: {str(e)}"
@@ -73,7 +126,6 @@ def start_recognition_api():
         
     try:
         # TODO: Triển khai real-time recognition từ camera
-        # Hiện tại trả về thông báo
         return jsonify({
             "success": True,
             "message": "Real-time recognition endpoint - Chưa triển khai",
@@ -85,6 +137,7 @@ def start_recognition_api():
         })
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
 @recognition_bp.route("/dataset_info/<int:employee_id>", methods=["GET", "OPTIONS"])
 def get_dataset_info_api(employee_id):
     """Lấy thông tin dataset của nhân viên"""
@@ -128,12 +181,45 @@ def get_dataset_info_api(employee_id):
             return jsonify({"success": False, "message": "Không tìm thấy nhân viên"}), 404
             
     except Exception as e:
-     
-        print(f"Lỗi khi lấy thông tin dataset: {str(e)}")
+        logger.error(f"Lỗi khi lấy thông tin dataset: {str(e)}")
         return jsonify({
             "success": False, 
             "message": f"Lỗi server: {str(e)}"
         }), 500
+@recognition_bp.route("/check_dataset_quality/<int:employee_id>", methods=["GET"])
+def check_dataset_quality(employee_id):
+    """Kiểm tra chất lượng dataset"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT image_url, image_order, face_detected
+            FROM employee_face_dataset 
+            WHERE employee_id = %s
+            ORDER BY image_order
+        """, (employee_id,))
+        
+        images = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        # Phân tích chất lượng
+        total_images = len(images)
+        face_detected = sum(1 for img in images if img['face_detected'])
+        quality_score = (face_detected / total_images) * 100 if total_images > 0 else 0
+        
+        return jsonify({
+            "success": True,
+            "employee_id": employee_id,
+            "total_images": total_images,
+            "face_detected_count": face_detected,
+            "quality_score": f"{quality_score:.1f}%",
+            "status": "GOOD" if quality_score >= 80 else "POOR"
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 @recognition_bp.route("/health", methods=["GET", "OPTIONS"])
 def health_check():
     """Health check endpoint"""
@@ -166,7 +252,7 @@ def health_check():
             "database": "connected",
             "cascade_file": "exists" if cascade_exists else "missing",
             "trainer_file": "exists" if trainer_exists else "missing",
-            "timestamp": datetime.datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat()
         })
     except Exception as e:
         return jsonify({
@@ -175,14 +261,71 @@ def health_check():
             "status": "unhealthy",
             "error": str(e)
         }), 500
-@recognition_bp.route("/realtime", methods=["POST"])
-def attendance_realtime():
-    """Nhận frame base64 từ FE và điểm danh"""
-    data = request.get_json()
-    if not data or "image" not in data:
-        return jsonify({"success": False, "error": "Không có image"}), 400
 
-    image_data = data["image"]
-    employee_id = data.get("employee_id")
-    result = recognize_from_image(image_data, employee_id)
-    return jsonify(result)
+# @recognition_bp.route("/realtime", methods=["POST", "OPTIONS"])
+# def attendance_realtime():
+#     """Nhận frame base64 từ FE và điểm danh (alias của recognize_from_base64)"""
+#     if request.method == "OPTIONS":
+#         return jsonify({"success": True}), 200
+        
+#     try:
+#         data = request.get_json()
+#         if not data or "image" not in data:
+#             return jsonify({"success": False, "error": "Không có image"}), 400
+
+#         image_data = data["image"]
+#         employee_id = data.get("employee_id")
+        
+#         if not employee_id:
+#             return jsonify({"success": False, "error": "Thiếu employee_id"}), 400
+
+#         logger.info(f"🔍 Real-time recognition cho employee_id: {employee_id}")
+        
+#         result = recognize_from_image(image_data, employee_id)
+#         return jsonify(result)
+        
+#     except Exception as e:
+#         logger.error(f"❌ Lỗi real-time recognition: {str(e)}")
+#         return jsonify({
+#             "success": False,
+#             "error": f"Lỗi server: {str(e)}"
+#         }), 500
+
+@recognition_bp.route("/debug_predict", methods=["POST", "OPTIONS"])
+def debug_predict_api():
+    """Endpoint debug để xem model đang dự đoán gì"""
+    if request.method == "OPTIONS":
+        return jsonify({"success": True}), 200
+        
+    try:
+        data = request.get_json()
+        image_data = data.get("image")
+        employee_id = data.get("employee_id")
+
+        if not image_data or not employee_id:
+            return jsonify({"success": False, "error": "Thiếu image hoặc employee_id"}), 400
+
+        # Import service để debug
+        from services.face_recognition_service import recognize_from_image
+        
+        result = recognize_from_image(image_data, employee_id)
+        
+        # Thêm debug info
+        debug_info = {
+            "employee_id_target": employee_id,
+            "received_image_size": len(image_data) if isinstance(image_data, str) else "binary",
+            "result_details": result
+        }
+        
+        return jsonify({
+            "success": result.get("success", False),
+            "debug_info": debug_info,
+            "result": result
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Lỗi debug endpoint: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"Lỗi debug: {str(e)}"
+        }), 500
