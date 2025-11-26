@@ -16,8 +16,8 @@ interface EmployeeInformationAttributes {
   accountId?: number;
   avatar?: string;
   status?: "active" | "inactive" | "suspended" | "terminated";
-  maritalStatus?: "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED"; // ✅ THÊM
-  numberOfDependents?: number; // ✅ THÊM
+  maritalStatus?: "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED"; //  THÊM
+  numberOfDependents?: number; //  THÊM
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
@@ -50,8 +50,8 @@ export class EmployeeInformation
   declare accountId?: number;
   declare avatar?: string;
   declare status?: "active" | "inactive" | "suspended" | "terminated";
-  declare maritalStatus?: "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED"; // ✅ THÊM
-  declare numberOfDependents?: number; // ✅ THÊM
+  declare maritalStatus?: "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED"; //  THÊM
+  declare numberOfDependents?: number; //  THÊM
   declare createdAt?: Date;
   declare updatedAt?: Date;
   declare deletedAt?: Date;
@@ -112,13 +112,13 @@ EmployeeInformation.init(
       defaultValue: "active",
     },
     maritalStatus: {
-      // ✅ THÊM
+      //  THÊM
       type: DataTypes.ENUM("SINGLE", "MARRIED", "DIVORCED", "WIDOWED"),
       defaultValue: "SINGLE",
       field: "marital_status",
     },
     numberOfDependents: {
-      // ✅ THÊM
+      //  THÊM
       type: DataTypes.INTEGER,
       defaultValue: 0,
       field: "number_of_dependents",
@@ -371,11 +371,11 @@ interface EmployeeDependentAttributes {
   dateOfBirth?: Date;
   nationalId?: string;
   taxRegistration?: boolean;
-  isActive?: boolean; // ✅ THÊM
+  isActive?: boolean; //  THÊM
   effectiveDate: Date;
   endDate?: Date;
   createdAt?: Date;
-  updatedAt?: Date; // ✅ THÊM
+  updatedAt?: Date; //  THÊM
 }
 
 export class EmployeeDependent extends Model<
@@ -392,11 +392,11 @@ export class EmployeeDependent extends Model<
   declare dateOfBirth?: Date;
   declare nationalId?: string;
   declare taxRegistration?: boolean;
-  declare isActive?: boolean; // ✅ THÊM
+  declare isActive?: boolean; //  THÊM
   declare effectiveDate: Date;
   declare endDate?: Date;
   declare createdAt?: Date;
-  declare updatedAt?: Date; // ✅ THÊM
+  declare updatedAt?: Date; //  THÊM
 }
 
 EmployeeDependent.init(
@@ -425,7 +425,7 @@ EmployeeDependent.init(
       field: "tax_registration",
     },
     isActive: {
-      // ✅ THÊM
+      //  THÊM
       type: DataTypes.BOOLEAN,
       defaultValue: true,
       field: "is_active",
@@ -442,7 +442,7 @@ EmployeeDependent.init(
       field: "created_at",
     },
     updatedAt: {
-      // ✅ THÊM
+      //  THÊM
       type: DataTypes.DATE,
       field: "updated_at",
     },
@@ -450,7 +450,7 @@ EmployeeDependent.init(
   {
     sequelize,
     tableName: "employee_dependents",
-    timestamps: true, // ✅ ĐỔI thành true
+    timestamps: true, //  ĐỔI thành true
     createdAt: "created_at",
     updatedAt: "updated_at",
   }

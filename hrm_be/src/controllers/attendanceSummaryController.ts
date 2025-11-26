@@ -7,6 +7,7 @@ import {
   deleteAttendanceSummary,
   getAttendanceSummaryById,
   getAttendanceSummaryByEmployeeAndMonth,
+  getYearlySummaryForEmployee,
 } from "../services/attendanceSummaryService";
 
 interface AttendanceSummaryRequest {
@@ -27,7 +28,6 @@ interface AttendanceSummarySearchDTO {
   summary_month?: string;
   departmentName?: string;
 }
-
 // ===============================
 // Lấy tất cả (phân trang + filter)
 // GET /api/attendance-summaries/filter?page=1&pageSize=10&employeeName=...&summaryMonth=...
@@ -38,10 +38,23 @@ export const getAllAttendanceSummaryController = async (
   next: NextFunction
 ) => {
   try {
+    console.log("📦 Received request for attendance summaries:", req.query);
+
     const page = parseInt((req.query.page as string) || "1");
     const pageSize = parseInt((req.query.pageSize as string) || "10");
     const employeeName = req.query.employeeName as string;
-    const summaryMonth = req.query.summaryMonth as string;
+    let summaryMonth = req.query.summaryMonth as string;
+
+    if (!summaryMonth) {
+      const currentYear = new Date().getFullYear();
+      const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
+      summaryMonth = `${currentYear}-${currentMonth}`;
+      console.log(`🔄 No month provided, using current: ${summaryMonth}`);
+    }
+
+    console.log(
+      `🔍 Filter: page=${page}, pageSize=${pageSize}, month=${summaryMonth}, employeeName=${employeeName}`
+    );
 
     const filter: any = {
       page,
@@ -53,14 +66,23 @@ export const getAllAttendanceSummaryController = async (
 
     const result = await getFilteredAttendanceSummaries(filter);
 
+    console.log(
+      `✅ Found ${result.totalItems} records, returning ${result.data.length} items`
+    );
+
+    // 🟢 ĐÃ SẠCH TỪ SERVICE, KHÔNG CẦN CLEAN LẠI
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
     res.json(
       ResultResponse(true, 200, null, null, result.data, result.totalItems)
     );
   } catch (err: any) {
+    console.error("❌ Error in getAllAttendanceSummaryController:", err);
     next(err);
   }
 };
-
 // ===============================
 // Tạo mới
 // POST /api/attendance-summaries
@@ -71,6 +93,8 @@ export const createAttendanceSummaryController = async (
   next: NextFunction
 ) => {
   try {
+    console.log("📝 Creating attendance summary:", req.body);
+
     const payload: AttendanceSummaryRequest = req.body;
 
     if (!payload.employee_id || !payload.summary_month) {
@@ -88,6 +112,8 @@ export const createAttendanceSummaryController = async (
 
     const record = await createAttendanceSummary(payload);
 
+    console.log("✅ Created attendance summary:", record.id);
+
     res
       .status(201)
       .json(
@@ -100,6 +126,7 @@ export const createAttendanceSummaryController = async (
         )
       );
   } catch (err: any) {
+    console.error("❌ Error in createAttendanceSummaryController:", err);
     next(err);
   }
 };
@@ -121,9 +148,13 @@ export const updateAttendanceSummaryController = async (
         .json(ResultResponse(false, 400, "INVALID_ID", "ID không hợp lệ"));
     }
 
+    console.log("📝 Updating attendance summary:", id, req.body);
+
     const payload: Partial<AttendanceSummaryRequest> = req.body;
 
     const record = await updateAttendanceSummary(id, payload);
+
+    console.log("✅ Updated attendance summary:", id);
 
     res
       .status(200)
@@ -137,6 +168,7 @@ export const updateAttendanceSummaryController = async (
         )
       );
   } catch (err: any) {
+    console.error("❌ Error in updateAttendanceSummaryController:", err);
     if (err.message === "Không tìm thấy tổng hợp chấm công") {
       return res
         .status(404)
@@ -163,7 +195,11 @@ export const deleteAttendanceSummaryController = async (
         .json(ResultResponse(false, 400, "INVALID_ID", "ID không hợp lệ"));
     }
 
+    console.log("🗑️ Deleting attendance summary:", id);
+
     await deleteAttendanceSummary(id);
+
+    console.log("✅ Deleted attendance summary:", id);
 
     res
       .status(200)
@@ -171,6 +207,7 @@ export const deleteAttendanceSummaryController = async (
         ResultResponse(true, 200, null, "Xóa tổng hợp chấm công thành công")
       );
   } catch (err: any) {
+    console.error("❌ Error in deleteAttendanceSummaryController:", err);
     if (err.message === "Không tìm thấy tổng hợp chấm công để xóa") {
       return res
         .status(404)
@@ -197,7 +234,13 @@ export const getAttendanceSummaryByIdController = async (
         .json(ResultResponse(false, 400, "INVALID_ID", "ID không hợp lệ"));
     }
 
+    console.log("🔍 Getting attendance summary by ID:", id);
+
     const record = await getAttendanceSummaryById(id);
+
+    console.log("✅ Found attendance summary:", id);
+
+    res.setHeader("Cache-Control", "no-cache");
 
     res
       .status(200)
@@ -211,6 +254,7 @@ export const getAttendanceSummaryByIdController = async (
         )
       );
   } catch (err: any) {
+    console.error("❌ Error in getAttendanceSummaryByIdController:", err);
     if (err.message === "Không tìm thấy tổng hợp chấm công") {
       return res
         .status(404)
@@ -252,12 +296,25 @@ export const getAttendanceSummaryByEmployeeAndMonthController = async (
         .json(ResultResponse(false, 400, "MISSING_MONTH", "Tháng là bắt buộc"));
     }
 
+    console.log(
+      "🔍 Getting attendance summary for employee:",
+      employeeId,
+      "month:",
+      month
+    );
+
     const record = await getAttendanceSummaryByEmployeeAndMonth(
       employeeId,
       month
     );
 
     if (!record) {
+      console.log(
+        "❌ Attendance summary not found for employee:",
+        employeeId,
+        "month:",
+        month
+      );
       return res
         .status(404)
         .json(
@@ -269,6 +326,10 @@ export const getAttendanceSummaryByEmployeeAndMonthController = async (
           )
         );
     }
+
+    console.log("✅ Found attendance summary for employee:", employeeId);
+
+    res.setHeader("Cache-Control", "no-cache");
 
     res
       .status(200)
@@ -282,6 +343,10 @@ export const getAttendanceSummaryByEmployeeAndMonthController = async (
         )
       );
   } catch (err: any) {
+    console.error(
+      "❌ Error in getAttendanceSummaryByEmployeeAndMonthController:",
+      err
+    );
     next(err);
   }
 };
@@ -303,6 +368,8 @@ export const getAttendanceOverviewController = async (
         .status(400)
         .json(ResultResponse(false, 400, "MISSING_MONTH", "Tháng là bắt buộc"));
     }
+
+    console.log("📊 Getting attendance overview for month:", month);
 
     // Gọi service function để lấy thống kê tổng quan
     const filter = { summaryMonth: month };
@@ -350,6 +417,10 @@ export const getAttendanceOverviewController = async (
       ),
     };
 
+    console.log("✅ Generated overview for month:", month, overview);
+
+    res.setHeader("Cache-Control", "no-cache");
+
     res
       .status(200)
       .json(
@@ -362,6 +433,7 @@ export const getAttendanceOverviewController = async (
         )
       );
   } catch (err: any) {
+    console.error("❌ Error in getAttendanceOverviewController:", err);
     next(err);
   }
 };
@@ -384,13 +456,19 @@ export const getDepartmentStatsController = async (
         .json(ResultResponse(false, 400, "MISSING_MONTH", "Tháng là bắt buộc"));
     }
 
+    console.log("📈 Getting department stats for month:", month);
+
     // Gọi service function để lấy dữ liệu
     const filter = { summaryMonth: month };
     const result = await getFilteredAttendanceSummaries(filter);
 
     // Tính toán thống kê theo phòng ban
     const departmentStats = result.data.reduce((acc: any[], item: any) => {
-      const department = item.employee?.departmentId || "Chưa xác định";
+      // SỬA: Truy cập department từ employee object
+      const department =
+        item.summaryEmployee?.departmentId ||
+        item.employee?.departmentId ||
+        "Chưa xác định";
       const existing = acc.find((stat) => stat.department === department);
 
       if (existing) {
@@ -437,6 +515,10 @@ export const getDepartmentStatsController = async (
       ),
     }));
 
+    console.log("✅ Generated department stats:", finalStats);
+
+    res.setHeader("Cache-Control", "no-cache");
+
     res
       .status(200)
       .json(
@@ -449,6 +531,108 @@ export const getDepartmentStatsController = async (
         )
       );
   } catch (err: any) {
+    console.error("❌ Error in getDepartmentStatsController:", err);
     next(err);
+  }
+};
+
+// ===============================
+// Lấy yearly summary cho employee
+// GET /api/attendance-summaries/employee/:employeeId/year/:year
+// ===============================
+export const getYearlySummaryForEmployeeController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const employeeId = parseInt(req.params.employeeId);
+    const year = req.params.year;
+
+    if (isNaN(employeeId)) {
+      return res
+        .status(400)
+        .json(
+          ResultResponse(
+            false,
+            400,
+            "INVALID_EMPLOYEE_ID",
+            "employeeId không hợp lệ"
+          )
+        );
+    }
+
+    if (!year || !/^\d{4}$/.test(year)) {
+      return res
+        .status(400)
+        .json(ResultResponse(false, 400, "INVALID_YEAR", "Năm không hợp lệ"));
+    }
+
+    console.log(
+      "📅 Getting yearly summary for employee:",
+      employeeId,
+      "year:",
+      year
+    );
+
+    const result = await getYearlySummaryForEmployee(employeeId, year);
+
+    console.log("✅ Generated yearly summary for employee:", employeeId);
+
+    res.setHeader("Cache-Control", "no-cache");
+
+    res
+      .status(200)
+      .json(
+        ResultResponse(
+          true,
+          200,
+          null,
+          "Lấy tổng quan chấm công theo năm thành công",
+          result
+        )
+      );
+  } catch (err: any) {
+    console.error("❌ Error in getYearlySummaryForEmployeeController:", err);
+    next(err);
+  }
+};
+
+// ===============================
+// Test endpoint để debug
+// GET /api/attendance-summaries/test
+// ===============================
+export const testAttendanceSummaryController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log("🧪 Testing attendance summary service...");
+
+    const testData = await getFilteredAttendanceSummaries({
+      summaryMonth: "2024-01",
+      page: 1,
+      pageSize: 5,
+    });
+
+    const testResult = {
+      totalItems: testData.totalItems,
+      dataCount: testData.data.length,
+      sampleData: testData.data.length > 0 ? testData.data[0] : null,
+      status: "Service is working correctly",
+    };
+
+    console.log("✅ Service test result:", testResult);
+
+    res.setHeader("Cache-Control", "no-cache");
+    res.json(
+      ResultResponse(true, 200, null, "Service test successful", testResult)
+    );
+  } catch (err: any) {
+    console.error("❌ Service test failed:", err);
+    res
+      .status(500)
+      .json(ResultResponse(false, 500, "TEST_FAILED", err.message));
   }
 };

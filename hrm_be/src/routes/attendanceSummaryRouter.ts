@@ -9,6 +9,8 @@ import {
   getAttendanceSummaryByEmployeeAndMonthController,
   getAttendanceOverviewController,
   getDepartmentStatsController,
+  getYearlySummaryForEmployeeController, // THÊM IMPORT NÀY
+  testAttendanceSummaryController, // THÊM TEST ENDPOINT
 } from "../controllers/attendanceSummaryController";
 
 const attendanceSummaryRouter = express.Router();
@@ -26,6 +28,10 @@ attendanceSummaryRouter.get(
   getAttendanceSummaryByEmployeeAndMonthController
 );
 attendanceSummaryRouter.get(
+  "/employee/:employeeId/year/:year", // THÊM ROUTE NÀY
+  getYearlySummaryForEmployeeController
+);
+attendanceSummaryRouter.get(
   "/overview/:month",
   getAttendanceOverviewController
 );
@@ -33,5 +39,8 @@ attendanceSummaryRouter.get(
   "/department-stats/:month",
   getDepartmentStatsController
 );
+
+// Test endpoint
+attendanceSummaryRouter.get("/test", testAttendanceSummaryController);
 
 export default attendanceSummaryRouter;

@@ -9,7 +9,7 @@ OvertimeRequest.init(
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     employee_id: { type: DataTypes.INTEGER, allowNull: false },
     work_shift_id: { type: DataTypes.INTEGER, allowNull: false },
-    overtime_date: { type: DataTypes.DATEONLY, allowNull: false }, // ✅ Đúng với DB
+    overtime_date: { type: DataTypes.DATEONLY, allowNull: false }, //  Đúng với DB
     start_time: { type: DataTypes.TIME, allowNull: false },
     end_time: { type: DataTypes.TIME, allowNull: false },
     total_hours: { type: DataTypes.DECIMAL(5, 2), allowNull: false },

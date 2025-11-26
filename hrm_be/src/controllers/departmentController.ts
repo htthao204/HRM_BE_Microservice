@@ -41,7 +41,7 @@ export const exportExcelController = async (req: Request, res: Response) => {
 
         if (idArray.length > 0) {
           filter.ids = idArray;
-          console.log(`✅ Export theo ${idArray.length} IDs:`, idArray);
+          console.log(` Export theo ${idArray.length} IDs:`, idArray);
         }
       } else if (Array.isArray(ids)) {
         // Nếu ids là array trực tiếp
@@ -54,7 +54,7 @@ export const exportExcelController = async (req: Request, res: Response) => {
 
         if (idArray.length > 0) {
           filter.ids = idArray;
-          console.log(`✅ Export theo ${idArray.length} IDs:`, idArray);
+          console.log(` Export theo ${idArray.length} IDs:`, idArray);
         }
       }
     }
@@ -62,13 +62,13 @@ export const exportExcelController = async (req: Request, res: Response) => {
     // 🟪 XỬ LÝ QUERY
     if (query && query.toString().trim() !== "") {
       filter.query = query.toString().trim();
-      console.log(`✅ Export theo query: "${filter.query}"`);
+      console.log(` Export theo query: "${filter.query}"`);
     }
 
     // 🟪 XỬ LÝ STATUS
     if (status && status.toString().trim() !== "") {
       filter.status = status.toString().trim();
-      console.log(`✅ Export theo status: "${filter.status}"`);
+      console.log(` Export theo status: "${filter.status}"`);
     }
 
     console.log("Final filter parameters:", filter);
@@ -76,7 +76,7 @@ export const exportExcelController = async (req: Request, res: Response) => {
     // 🟪 SỬA: Sử dụng exportDepartmentsToExcel từ service
     const buffer = await DepartmentService.exportDepartmentsToExcel();
 
-    console.log("✅ Export thành công, gửi file...");
+    console.log(" Export thành công, gửi file...");
 
     // Set headers
     res.setHeader(

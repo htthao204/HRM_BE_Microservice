@@ -24,7 +24,7 @@ class AttendanceCalendarService:
             
             # Lấy và xử lý kết quả (không cần dùng nhưng cần fetch để hoàn thành query)
             results = cursor.fetchall()
-            print(f"✅ Đã tổng hợp {len(results)} ngày cho nhân viên {employee_id}")
+            print(f" Đã tổng hợp {len(results)} ngày cho nhân viên {employee_id}")
             
             # Commit để đảm bảo dữ liệu được cập nhật
             conn.commit()

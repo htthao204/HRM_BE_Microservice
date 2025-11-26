@@ -74,11 +74,11 @@ SalaryStructure.init(
     },
     calculationType: {
       field: "calculation_type",
-      type: DataTypes.STRING(20), // ✅ Khớp với VARCHAR(20) trong database
+      type: DataTypes.STRING(20), //  Khớp với VARCHAR(20) trong database
       allowNull: false,
       defaultValue: "fixed",
       validate: {
-        isIn: [["fixed", "percentage", "formula"]], // ✅ Validation thay cho ENUM
+        isIn: [["fixed", "percentage", "formula"]], //  Validation thay cho ENUM
       },
     },
     formula: {
@@ -129,7 +129,7 @@ SalaryStructure.init(
     sequelize,
     tableName: "salary_structures",
     timestamps: true,
-    underscored: true, // ✅ Tự động convert camelCase to snake_case
+    underscored: true, //  Tự động convert camelCase to snake_case
     indexes: [
       {
         fields: ["employee_id"],

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class RealtimeRecognitionNamespace(Namespace):
     def on_connect(self):
-        logger.info(f"✅ Client connected to realtime namespace: {self.namespace}")
+        logger.info(f" Client connected to realtime namespace: {self.namespace}")
         emit("connected", {
             "success": True,
             "message": "Connected to real-time recognition",

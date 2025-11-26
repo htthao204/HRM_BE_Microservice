@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from services.face_recognition_service import face_recognition_service
 from services.face_registration_service import face_registration_service
-from services.real_time_recognition import recognition_realtime  # ← THÊM IMPORT NÀY
+from services.real_time_recognition import recognition_realtime  
 from datetime import datetime
 
 face_recognition_bp = Blueprint('face_recognition', __name__)
@@ -29,6 +29,24 @@ def recognize_face_realtime():
                 "error": "Missing employee_id"
             }), 400
 
+        # ✅ THÊM KIỂM TRA GIỚI HẠN CHO REAL-TIME
+        from services.attendance_log_service import AttendanceLogService
+        
+        limit_check = AttendanceLogService.log_attendance(
+            employee_id=employee_id,
+            action="CHECKIN",
+            source="FACE_RECOGNITION_REALTIME",
+            location="Camera Real-time"
+        )
+        
+        if not limit_check.get("success", False):
+            return jsonify({
+                "success": False,
+                "error": limit_check.get("error"),
+                "message": limit_check.get("message"),
+                "cooldown_remaining": limit_check.get("remaining_minutes")
+            }), 400
+
         # Gọi service real-time recognition
         result = recognition_realtime(image_data, employee_id)
         
@@ -54,7 +72,28 @@ def recognize_face():
             if not employee_id:
                 return jsonify({"success": False, "error": "Missing employee_id"}), 400
 
-            # Gọi service với tên tham số đúng
+  
+            from services.attendance_log_service import AttendanceLogService
+            
+            limit_check = AttendanceLogService.log_attendance(
+                employee_id=employee_id,
+                action="CHECKIN",  # Hoặc logic xác định CHECKIN/CHECKOUT
+                source="FACE_RECOGNITION",
+                location="Hệ thống nhận diện khuôn mặt"
+            )
+            
+            # ❌ Nếu bị chặn do giới hạn
+            if not limit_check.get("success", False):
+                return jsonify({
+                    "success": False,
+                    "error": limit_check.get("error"),
+                    "message": limit_check.get("message"),
+                    "cooldown_remaining": limit_check.get("remaining_minutes"),
+                    "last_action": limit_check.get("last_action"),
+                    "last_time": limit_check.get("last_time")
+                }), 400
+
+            # ✅ Nếu vượt qua kiểm tra giới hạn - tiếp tục nhận diện
             result = face_recognition_service.recognize_from_image_file(
                 file=image_file, 
                 employee_id=employee_id
@@ -62,10 +101,28 @@ def recognize_face():
 
             return jsonify(result), 200 if result.get('success') else 400
 
-        # --- IMAGE URL ---
+        # --- IMAGE URL --- (cũng thêm kiểm tra tương tự)
         data = request.get_json()
         if not data or 'image_url' not in data or 'employee_id' not in data:
             return jsonify({"success": False, "error": "Missing image_url or employee_id"}), 400
+
+        # ✅ THÊM KIỂM TRA GIỚI HẠN CHO URL
+        from services.attendance_log_service import AttendanceLogService
+        
+        limit_check = AttendanceLogService.log_attendance(
+            employee_id=data['employee_id'],
+            action="CHECKIN",
+            source="FACE_RECOGNITION", 
+            location="Hệ thống nhận diện khuôn mặt"
+        )
+        
+        if not limit_check.get("success", False):
+            return jsonify({
+                "success": False,
+                "error": limit_check.get("error"),
+                "message": limit_check.get("message"),
+                "cooldown_remaining": limit_check.get("remaining_minutes")
+            }), 400
 
         result = face_recognition_service.recognize_from_image_url(
             image_url=data['image_url'],

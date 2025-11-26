@@ -162,7 +162,7 @@ export default class WorkShiftService {
         order: [["created_at", "DESC"]],
       });
 
-      console.log(`✅ Tìm thấy ${workShifts.length} ca làm việc`);
+      console.log(` Tìm thấy ${workShifts.length} ca làm việc`);
 
       // 🟪 TẠO WORKBOOK
       const workbook = new ExcelJS.Workbook();
@@ -228,7 +228,7 @@ export default class WorkShiftService {
         };
       }
 
-      console.log("✅ Xuất Excel WorkShift thành công");
+      console.log(" Xuất Excel WorkShift thành công");
       return workbook;
     } catch (error: any) {
       console.error("❌ Lỗi xuất Excel WorkShift:", error);
@@ -247,7 +247,7 @@ export default class WorkShiftService {
       const workbook = await this.exportWorkShiftsToExcel(filter);
       const buffer = await workbook.xlsx.writeBuffer();
 
-      console.log("✅ Tạo buffer thành công");
+      console.log(" Tạo buffer thành công");
       return Buffer.from(buffer);
     } catch (error: any) {
       console.error("❌ Lỗi xuất Excel buffer:", error);

@@ -40,7 +40,7 @@ def delete_employee_dataset(employee_code):
             public_id = resource['public_id']
             if search_pattern in public_id:
                 employee_resources.append(resource)
-                print(f"   ✅ Tìm thấy: {public_id}")
+                print(f"    Tìm thấy: {public_id}")
         
         if not employee_resources:
             print(f"⚠️ Không tìm thấy ảnh nào của {employee_code} trên Cloudinary")
@@ -60,7 +60,7 @@ def delete_employee_dataset(employee_code):
                 
                 if result.get('result') == 'ok':
                     success_count += 1
-                    print(f"   ✅ Đã xóa: {public_id}")
+                    print(f"    Đã xóa: {public_id}")
                 else:
                     error_msg = f"Lỗi: {result.get('result', 'Unknown error')}"
                     error_messages.append(f"{public_id}: {error_msg}")
@@ -71,7 +71,7 @@ def delete_employee_dataset(employee_code):
                 error_messages.append(f"{public_id}: {error_msg}")
                 print(f"   ❌ Lỗi xóa {public_id}: {error_msg}")
         
-        print(f"✅ Đã xóa {success_count}/{len(employee_resources)} ảnh của {employee_code}")
+        print(f" Đã xóa {success_count}/{len(employee_resources)} ảnh của {employee_code}")
         return success_count, len(employee_resources), error_messages
         
     except Exception as e:
@@ -128,7 +128,7 @@ def delete_from_cloudinary(image_url):
             result = cloudinary.uploader.destroy(public_id)
             
             if result.get('result') == 'ok':
-                print(f"✅ Đã xóa ảnh: {public_id}")
+                print(f" Đã xóa ảnh: {public_id}")
                 return True, "Xóa thành công"
             else:
                 print(f"❌ Không thể xóa ảnh: {result}")

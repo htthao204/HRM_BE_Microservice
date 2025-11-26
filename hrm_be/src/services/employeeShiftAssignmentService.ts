@@ -154,7 +154,7 @@ export const exportEmployeeShiftAssignmentsToExcel = async (filter?: {
       type: QueryTypes.SELECT, // Sử dụng QueryTypes
     });
 
-    console.log(`✅ Tìm thấy ${assignments.length} phân ca làm việc`);
+    console.log(` Tìm thấy ${assignments.length} phân ca làm việc`);
 
     // 🟪 TẠO WORKBOOK
     const workbook = new ExcelJS.Workbook();
@@ -242,7 +242,7 @@ export const exportEmployeeShiftAssignmentsToExcel = async (filter?: {
       };
     }
 
-    console.log("✅ Xuất Excel phân ca làm việc thành công");
+    console.log(" Xuất Excel phân ca làm việc thành công");
     return workbook;
   } catch (error: any) {
     console.error("❌ Lỗi xuất Excel phân ca làm việc:", error);
@@ -260,7 +260,7 @@ export const exportEmployeeShiftAssignmentsToExcelBuffer = async (
     const workbook = await exportEmployeeShiftAssignmentsToExcel(filter);
     const buffer = await workbook.xlsx.writeBuffer();
 
-    console.log("✅ Tạo buffer thành công");
+    console.log(" Tạo buffer thành công");
     return Buffer.from(buffer);
   } catch (error: any) {
     console.error("❌ Lỗi xuất Excel buffer:", error);

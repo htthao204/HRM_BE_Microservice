@@ -109,7 +109,7 @@ def run_recognition(max_faces_per_run=5):
                                 try:
                                     mark_attendance(employee_id=id)
                                     marked_today[id] = now
-                                    last_message = f"✅ Đã điểm danh cho {name}"
+                                    last_message = f" Đã điểm danh cho {name}"
                                     last_message_time = now
 
                                     recognized_faces.append({
@@ -150,7 +150,7 @@ def run_recognition(max_faces_per_run=5):
             # Hiển thị thông báo (trong 3 giây)
             if last_message and last_message_time:
                 if (datetime.datetime.now() - last_message_time).total_seconds() < 3:
-                    color = (0, 255, 0) if "✅" in last_message else (0, 0, 255)
+                    color = (0, 255, 0) if "" in last_message else (0, 0, 255)
                     cv2.putText(img, last_message, (20, 40), font, 0.7, color, 2)
 
             # Hiển thị thống kê
@@ -174,7 +174,7 @@ def run_recognition(max_faces_per_run=5):
             cam.release()
         cv2.destroyAllWindows()
 
-    print(f"✅ Kết thúc nhận diện. Đã điểm danh: {len(recognized_faces)} nhân viên")
+    print(f" Kết thúc nhận diện. Đã điểm danh: {len(recognized_faces)} nhân viên")
     
     return {
         "success": True,

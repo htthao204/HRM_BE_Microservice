@@ -7,7 +7,7 @@ const ACCESS_TOKEN_SECRET =
   process.env.ACCESS_TOKEN_SECRET || "fallback-secret";
 
 /**
- * ✅ Interface cho thông tin employee
+ *  Interface cho thông tin employee
  */
 interface EmployeeInfo {
   id?: number;
@@ -20,7 +20,7 @@ interface EmployeeInfo {
 }
 
 /**
- * ✅ Interface cho decoded token
+ *  Interface cho decoded token
  */
 interface DecodedToken extends JwtPayload {
   id: number;
@@ -38,7 +38,7 @@ interface DecodedToken extends JwtPayload {
 }
 
 /**
- * ✅ Hàm decode token để lấy thông tin người dùng và employee
+ *  Hàm decode token để lấy thông tin người dùng và employee
  */
 export const decodeToken = (token: string) => {
   try {
@@ -118,7 +118,7 @@ export const decodeToken = (token: string) => {
 };
 
 /**
- * ✅ Hàm debug token để xem cấu trúc
+ *  Hàm debug token để xem cấu trúc
  */
 export const debugToken = (token: string) => {
   try {

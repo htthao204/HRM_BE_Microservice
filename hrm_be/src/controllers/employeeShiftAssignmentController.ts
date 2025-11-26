@@ -314,11 +314,7 @@ export const exportShiftAssignmentsToExcelController = async (
       }.xlsx"`
     );
 
-    console.log(
-      "✅ Xuất Excel thành công, kích thước:",
-      buffer.length,
-      "bytes"
-    );
+    console.log(" Xuất Excel thành công, kích thước:", buffer.length, "bytes");
     res.status(200).send(buffer);
   } catch (error: any) {
     console.error("❌ Lỗi export Excel:", error);
@@ -397,7 +393,7 @@ export const downloadShiftAssignmentTemplateController = async (
     );
 
     console.log(
-      "✅ Download template thành công, kích thước:",
+      " Download template thành công, kích thước:",
       buffer.length,
       "bytes"
     );
@@ -455,7 +451,7 @@ export const exportShiftAssignmentsWithBodyController = async (
     );
 
     console.log(
-      "✅ Xuất Excel với body thành công, kích thước:",
+      " Xuất Excel với body thành công, kích thước:",
       buffer.length,
       "bytes"
     );

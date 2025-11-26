@@ -57,7 +57,7 @@ export const getAllEmployees = async (
       "fullName",
       "email",
       "phone",
-      "avatar", // ✅ THÊM AVATAR
+      "avatar", //  THÊM AVATAR
       "status",
       "maritalStatus",
       "numberOfDependents",
@@ -106,7 +106,7 @@ export const getEmployeeByAccountId = async (
   employeeCode: string;
   fullName: string;
   email?: string;
-  avatar?: string; // ✅ THÊM AVATAR
+  avatar?: string; //  THÊM AVATAR
   position?: string;
   department?: string;
   account: {
@@ -125,7 +125,7 @@ export const getEmployeeByAccountId = async (
         "fullName",
         "accountId",
         "email",
-        "avatar", // ✅ THÊM AVATAR
+        "avatar", //  THÊM AVATAR
       ],
       include: [
         {
@@ -156,7 +156,7 @@ export const getEmployeeByAccountId = async (
       employeeCode: employee.employeeCode,
       fullName: employee.fullName,
       email: (employee as any).email,
-      avatar: (employee as any).avatar, // ✅ THÊM AVATAR
+      avatar: (employee as any).avatar, //  THÊM AVATAR
       position: (employee as any).employeePosition?.name,
       department: (employee as any).employeeDepartment?.name,
       account: {
@@ -165,7 +165,7 @@ export const getEmployeeByAccountId = async (
       },
     };
 
-    console.log(`✅ Found employee with account:`, result);
+    console.log(` Found employee with account:`, result);
     return result;
   } catch (error) {
     console.error(
@@ -177,7 +177,7 @@ export const getEmployeeByAccountId = async (
 };
 
 /**
- * ✅ Lấy thông tin employee của user hiện tại (cho API /employees/me)
+ *  Lấy thông tin employee của user hiện tại (cho API /employees/me)
  */
 export const getMyEmployee = async (accountId: number): Promise<any> => {
   return getEmployeeByAccountId(accountId);
@@ -194,7 +194,7 @@ export const getEmployeeById = async (id: number) => {
       "fullName",
       "email",
       "phone",
-      "avatar", // ✅ THÊM AVATAR
+      "avatar", //  THÊM AVATAR
       "status",
       "maritalStatus",
       "numberOfDependents",
@@ -266,31 +266,31 @@ export const createEmployee = async (employeeData: any) => {
       const username = employeeData.email;
       const defaultPassword = "123456";
 
-      // ✅ SỬA: Nếu không truyền roleId thì mặc định là 5, còn không thì lấy giá trị truyền vào
+      //  SỬA: Nếu không truyền roleId thì mặc định là 5, còn không thì lấy giá trị truyền vào
       const roleId =
         employeeData.roleId !== undefined ? employeeData.roleId : 5;
 
       const accountRequest = {
         username,
         password: defaultPassword,
-        roleId: roleId, // ✅ Dùng roleId đã xử lý
+        roleId: roleId, //  Dùng roleId đã xử lý
       };
 
       const newAccount = await registerAccount(accountRequest, t);
       accountId = newAccount.id;
 
       console.log(
-        `✅ Đã tạo account tự động: ${username} / 123456 / Role: ${roleId}`
+        ` Đã tạo account tự động: ${username} / 123456 / Role: ${roleId}`
       );
     }
 
-    // ✅ 2. Tạo thông tin nhân viên (liên kết với account qua accountId)
+    //  2. Tạo thông tin nhân viên (liên kết với account qua accountId)
     // Loại bỏ roleId khỏi employeeData trước khi tạo employee
     const { roleId, ...employeeDataWithoutRoleId } = employeeData;
 
     const newEmployee = await EmployeeInformation.create(
       {
-        ...employeeDataWithoutRoleId, // ✅ Dùng data đã loại bỏ roleId
+        ...employeeDataWithoutRoleId, //  Dùng data đã loại bỏ roleId
         employeeCode: nextCode,
         accountId: accountId,
       },
@@ -341,7 +341,7 @@ export const createEmployee = async (employeeData: any) => {
         ? {
             username: employeeData.email,
             defaultPassword: "123456",
-            roleId: employeeData.roleId !== undefined ? employeeData.roleId : 5, // ✅ Hiển thị roleId thực tế
+            roleId: employeeData.roleId !== undefined ? employeeData.roleId : 5, //  Hiển thị roleId thực tế
           }
         : null,
     };
@@ -599,7 +599,7 @@ export const exportEmployeesToExcel = async (filter?: {
         e.full_name as "fullName",
         e.email,
         e.phone,
-        e.avatar, -- ✅ THÊM AVATAR
+        e.avatar, --  THÊM AVATAR
         e.status,
         e.marital_status as "maritalStatus",
         e.number_of_dependents as "numberOfDependents",
@@ -638,7 +638,7 @@ export const exportEmployeesToExcel = async (filter?: {
       type: "SELECT",
     });
 
-    console.log(`✅ Tìm thấy ${employees.length} nhân viên`);
+    console.log(` Tìm thấy ${employees.length} nhân viên`);
 
     // 🟪 TẠO WORKBOOK
     const workbook = new ExcelJS.Workbook();
@@ -649,7 +649,7 @@ export const exportEmployeesToExcel = async (filter?: {
       { header: "STT", key: "stt", width: 8 },
       { header: "Mã NV", key: "employeeCode", width: 15 },
       { header: "Họ và tên", key: "fullName", width: 25 },
-      { header: "Avatar URL", key: "avatar", width: 30 }, // ✅ THÊM AVATAR
+      { header: "Avatar URL", key: "avatar", width: 30 }, //  THÊM AVATAR
       { header: "Email", key: "email", width: 25 },
       { header: "Số điện thoại", key: "phone", width: 15 },
       { header: "Phòng ban", key: "departmentName", width: 20 },
@@ -691,7 +691,7 @@ export const exportEmployeesToExcel = async (filter?: {
         stt: index + 1,
         employeeCode: emp.employeeCode || "N/A",
         fullName: emp.fullName || "N/A",
-        avatar: emp.avatar || "Không có", // ✅ THÊM AVATAR
+        avatar: emp.avatar || "Không có", //  THÊM AVATAR
         email: emp.email || "N/A",
         phone: emp.phone || "N/A",
         departmentName: emp.departmentName || "N/A",
@@ -759,7 +759,7 @@ export const exportEmployeesToExcel = async (filter?: {
       };
     }
 
-    console.log("✅ Xuất Excel nhân viên thành công");
+    console.log(" Xuất Excel nhân viên thành công");
     return workbook;
   } catch (error: any) {
     console.error("❌ Lỗi xuất Excel nhân viên:", error);
@@ -778,7 +778,7 @@ export const exportEmployeesToExcelBuffer = async (
     const workbook = await exportEmployeesToExcel(filter);
     const buffer = await workbook.xlsx.writeBuffer();
 
-    console.log("✅ Tạo buffer thành công");
+    console.log(" Tạo buffer thành công");
     return Buffer.from(buffer);
   } catch (error: any) {
     console.error("❌ Lỗi xuất Excel buffer:", error);

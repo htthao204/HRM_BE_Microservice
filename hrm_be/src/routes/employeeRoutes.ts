@@ -56,6 +56,6 @@ employeeRouters.delete("/:id", authentication, deleteEmployeeController);
 // 🔹 PROTECTED ROUTES (Cần authentication)
 // ===============================
 
-// ✅ Lấy employee của user hiện tại
+//  Lấy employee của user hiện tại
 employeeRouters.get("/me", authentication, getCurrentEmployeeController);
 export default employeeRouters;

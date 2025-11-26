@@ -73,21 +73,21 @@ LeaveType.init(
     isPaid: {
       field: "is_paid",
       type: DataTypes.BOOLEAN,
-      allowNull: false, // ✅ THÊM
+      allowNull: false, //  THÊM
       defaultValue: true,
     },
     isActive: {
       field: "is_active",
       type: DataTypes.BOOLEAN,
-      allowNull: false, // ✅ THÊM
+      allowNull: false, //  THÊM
       defaultValue: true,
     },
-    // ✅ XÓA created_at, updated_at khai báo thủ công
+    //  XÓA created_at, updated_at khai báo thủ công
   },
   {
     sequelize,
     tableName: "leave_types",
-    timestamps: true, // ✅ ĐỔI thành true
+    timestamps: true, //  ĐỔI thành true
     createdAt: "created_at",
     updatedAt: "updated_at",
   }

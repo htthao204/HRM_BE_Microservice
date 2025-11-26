@@ -53,7 +53,7 @@ def upload_to_cloudinary(face_image, employee_code, image_number):
         # Lấy URL từ kết quả
         image_url = upload_result['secure_url']  # HTTPS URL
         
-        print(f"✅ Upload thành công: {employee_code}_{image_number}.jpg")
+        print(f" Upload thành công: {employee_code}_{image_number}.jpg")
         print(f"   URL: {image_url}")
         
         return True, image_url, None

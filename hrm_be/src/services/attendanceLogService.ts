@@ -75,7 +75,7 @@ export const getFilteredAttendanceLogs = async (
   const include = [
     {
       model: EmployeeInformation,
-      as: "logEmployee", // ✅ đúng alias
+      as: "logEmployee", //  đúng alias
       attributes: ["id", "fullName", "department_id"],
       where: employeeName
         ? {

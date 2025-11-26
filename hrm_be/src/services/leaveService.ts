@@ -58,7 +58,7 @@ export const getLeaveBalance = async (
       attributes: ["id", "name", "code", "defaultDays", "maxDays"],
     });
 
-    console.log(`✅ Tìm thấy ${leaveTypes.length} loại nghỉ phép`);
+    console.log(` Tìm thấy ${leaveTypes.length} loại nghỉ phép`);
 
     // 3. Lấy số ngày phép đã sử dụng trong năm
     const usedLeavesQuery = `
@@ -77,7 +77,7 @@ export const getLeaveBalance = async (
       type: "SELECT",
     });
 
-    console.log(`✅ Đã sử dụng ${usedLeaves.length} loại nghỉ phép`);
+    console.log(` Đã sử dụng ${usedLeaves.length} loại nghỉ phép`);
 
     // 4. Tính toán số ngày còn lại cho từng loại
     const balances: LeaveBalance[] = leaveTypes.map((leaveType) => {
@@ -114,7 +114,7 @@ export const getLeaveBalance = async (
     };
 
     console.log(
-      `✅ Tính toán xong: Tổng ${summary.totalAvailable} ngày, đã dùng ${summary.totalUsed} ngày, còn lại ${summary.totalRemaining} ngày`
+      ` Tính toán xong: Tổng ${summary.totalAvailable} ngày, đã dùng ${summary.totalUsed} ngày, còn lại ${summary.totalRemaining} ngày`
     );
 
     return {
@@ -423,7 +423,7 @@ export const exportLeavesToExcel = async (filter?: {
       type: "SELECT",
     });
 
-    console.log(`✅ Tìm thấy ${leaves.length} đơn nghỉ phép`);
+    console.log(` Tìm thấy ${leaves.length} đơn nghỉ phép`);
 
     // 🟪 TẠO WORKBOOK
     const workbook = new ExcelJS.Workbook();
@@ -507,7 +507,7 @@ export const exportLeavesToExcel = async (filter?: {
       };
     }
 
-    console.log("✅ Xuất Excel đơn nghỉ phép thành công");
+    console.log(" Xuất Excel đơn nghỉ phép thành công");
     return workbook;
   } catch (error) {
     console.error("❌ Lỗi xuất Excel đơn nghỉ phép:", error);
@@ -526,7 +526,7 @@ export const exportLeavesToExcelBuffer = async (
     const workbook = await exportLeavesToExcel(filter);
     const buffer = await workbook.xlsx.writeBuffer();
 
-    console.log("✅ Tạo buffer thành công");
+    console.log(" Tạo buffer thành công");
     return Buffer.from(buffer);
   } catch (error) {
     console.error("❌ Lỗi xuất Excel buffer:", error);

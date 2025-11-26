@@ -53,12 +53,12 @@ WorkScheduleRule.init(
     },
     ruleType: {
       field: "rule_type",
-      type: DataTypes.STRING(20), // ✅ Khớp với VARCHAR(20) trong database
+      type: DataTypes.STRING(20), //  Khớp với VARCHAR(20) trong database
       allowNull: false,
       validate: {
         isIn: [
           ["late_threshold", "early_threshold", "working_days", "holidays"],
-        ], // ✅ Validation thay cho ENUM
+        ], //  Validation thay cho ENUM
       },
     },
     value: {
@@ -95,7 +95,7 @@ WorkScheduleRule.init(
     sequelize,
     tableName: "work_schedule_rules",
     timestamps: true,
-    underscored: true, // ✅ Tự động convert camelCase to snake_case
+    underscored: true, //  Tự động convert camelCase to snake_case
     indexes: [
       {
         fields: ["rule_type"],

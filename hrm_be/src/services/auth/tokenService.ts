@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import AccountModel from "../../models/accountModel";
 import RefreshTokenModel from "../../models/refreshTokenModal";
 
-// ✅ Đảm bảo đọc .env trước khi dùng process.env
+//  Đảm bảo đọc .env trước khi dùng process.env
 dotenv.config();
 
 const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET as string;
@@ -15,21 +15,21 @@ if (!ACCESS_TOKEN_SECRET || !REFRESH_TOKEN_SECRET) {
 }
 
 /**
- * ✅ Tạo Access Token
+ *  Tạo Access Token
  */
 export const createAccessToken = (payload: any) => {
   return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: "2h" });
 };
 
 /**
- * ✅ Tạo Refresh Token
+ *  Tạo Refresh Token
  */
 export const createRefreshToken = (payload: any) => {
   return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
 };
 
 /**
- * ✅ Giải mã Access Token → trả về payload
+ *  Giải mã Access Token → trả về payload
  */
 export const verifyToken = (token: string): JwtPayload => {
   try {
@@ -40,7 +40,7 @@ export const verifyToken = (token: string): JwtPayload => {
 };
 
 /**
- * ✅ Làm mới access token từ refresh token
+ *  Làm mới access token từ refresh token
  */
 export const refreshAccessToken = async (refreshToken: string) => {
   if (!refreshToken) throw new Error("No refresh token provided");

@@ -177,7 +177,7 @@ export const exportExcelController = async (req: Request, res: Response) => {
 
         if (idArray.length > 0) {
           filter.selectedIds = idArray;
-          console.log(`✅ Đã nhận ${idArray.length} selectedIds:`, idArray);
+          console.log(` Đã nhận ${idArray.length} selectedIds:`, idArray);
         }
       }
     }
@@ -232,7 +232,7 @@ export const exportExcelController = async (req: Request, res: Response) => {
 
     const buffer = await exportLeavesToExcelBuffer(filter);
 
-    console.log("✅ Export thành công, gửi file...");
+    console.log(" Export thành công, gửi file...");
 
     // Tạo tên file dựa trên loại export
     let fileName = "don-nghi-phep.xlsx";

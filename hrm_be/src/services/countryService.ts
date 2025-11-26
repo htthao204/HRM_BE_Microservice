@@ -273,7 +273,7 @@ export const exportCountriesToExcel = async (
       order: [["name", "ASC"]],
     });
 
-    console.log(`✅ Tìm thấy ${countries.length} quốc gia`);
+    console.log(` Tìm thấy ${countries.length} quốc gia`);
 
     // Tạo workbook
     const workbook = new ExcelJS.Workbook();
@@ -321,7 +321,7 @@ export const exportCountriesToExcel = async (
       };
     }
 
-    console.log("✅ Xuất Excel quốc gia thành công");
+    console.log(" Xuất Excel quốc gia thành công");
     return workbook;
   } catch (error) {
     console.error("❌ Lỗi xuất Excel quốc gia:", error);
@@ -342,7 +342,7 @@ export const exportCountriesToExcelBuffer = async (
     const workbook = await exportCountriesToExcel(filter);
     const buffer = await workbook.xlsx.writeBuffer();
 
-    console.log("✅ Tạo buffer thành công");
+    console.log(" Tạo buffer thành công");
     return Buffer.from(buffer);
   } catch (error) {
     console.error("❌ Lỗi xuất Excel buffer:", error);

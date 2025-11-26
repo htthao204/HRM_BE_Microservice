@@ -663,5 +663,5 @@ export function setupAssociations() {
     },
   });
 
-  console.log("✅ All associations have been set up successfully!");
+  console.log(" All associations have been set up successfully!");
 }

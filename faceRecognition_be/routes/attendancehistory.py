@@ -130,7 +130,7 @@ def delete_dataset_api(employee_code):
         
         return jsonify({
             "success": True,
-            "message": f"✅ Đã xóa {success_count} ảnh từ Cloudinary và database cho {employee_code}",
+            "message": f" Đã xóa {success_count} ảnh từ Cloudinary và database cho {employee_code}",
             "deleted_count": success_count,
             "errors": errors if errors else None
         })

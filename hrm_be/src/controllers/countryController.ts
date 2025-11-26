@@ -237,7 +237,7 @@ export const exportCountriesExcelController = async (
 
     const buffer = await exportCountriesToExcelBuffer(filter);
 
-    console.log("✅ Export thành công, gửi file...");
+    console.log(" Export thành công, gửi file...");
 
     res.setHeader(
       "Content-Type",

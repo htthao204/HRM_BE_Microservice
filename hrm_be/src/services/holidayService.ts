@@ -220,7 +220,7 @@ export class HolidayService {
         order: [["holidayDate", "ASC"]],
       });
 
-      console.log(`✅ Tìm thấy ${holidays.length} ngày lễ`);
+      console.log(` Tìm thấy ${holidays.length} ngày lễ`);
 
       // Create workbook
       const workbook = new ExcelJS.Workbook();
@@ -292,7 +292,7 @@ export class HolidayService {
         };
       }
 
-      console.log("✅ Xuất Excel holidays thành công");
+      console.log(" Xuất Excel holidays thành công");
       return workbook;
     } catch (error: any) {
       console.error("❌ Lỗi xuất Excel holidays:", error);
@@ -309,7 +309,7 @@ export class HolidayService {
       const workbook = await this.exportHolidaysToExcel(filter);
       const buffer = await workbook.xlsx.writeBuffer();
 
-      console.log("✅ Tạo buffer thành công");
+      console.log(" Tạo buffer thành công");
       return Buffer.from(buffer);
     } catch (error: any) {
       console.error("❌ Lỗi xuất Excel buffer:", error);

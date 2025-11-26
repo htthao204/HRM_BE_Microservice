@@ -46,7 +46,7 @@ export const authentication = (
   try {
     const decoded = jwt.verify(token, secret) as JwtPayload;
 
-    console.log("✅ Token decoded successfully for user:", decoded.username);
+    console.log(" Token decoded successfully for user:", decoded.username);
 
     req.Account = {
       id: decoded.id as number,

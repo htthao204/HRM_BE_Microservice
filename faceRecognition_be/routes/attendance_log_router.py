@@ -25,7 +25,7 @@ def get_attendance_history():
         if result["success"]:
             return jsonify({
                 "success": True,
-                "data": result,  # ✅ hoặc "records": result["records"] nếu muốn chỉ danh sách
+                "data": result,  #  hoặc "records": result["records"] nếu muốn chỉ danh sách
                 "timestamp": datetime.now().isoformat()
             })
 

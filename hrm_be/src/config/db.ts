@@ -29,7 +29,7 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
 export const connectDB = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
-    console.log("✅ PostgreSQL connected successfully");
+    console.log(" PostgreSQL connected successfully");
   } catch (error) {
     console.error("❌ Unable to connect to PostgreSQL:", error);
     process.exit(1); // dừng app nếu không kết nối được

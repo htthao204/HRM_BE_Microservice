@@ -61,7 +61,7 @@ Leave.init(
       allowNull: false,
       field: "employee_id",
       references: {
-        model: "employee_information", // ✅ Dùng table name thay vì model class
+        model: "employee_information", //  Dùng table name thay vì model class
         key: "id",
       },
     },
@@ -70,7 +70,7 @@ Leave.init(
       allowNull: false,
       field: "leave_type_id",
       references: {
-        model: "leave_types", // ✅ Dùng table name thay vì model class
+        model: "leave_types", //  Dùng table name thay vì model class
         key: "id",
       },
     },
@@ -110,11 +110,11 @@ Leave.init(
       allowNull: true,
     },
     status: {
-      type: DataTypes.STRING(20), // ✅ Khớp với VARCHAR(20) trong database
+      type: DataTypes.STRING(20), //  Khớp với VARCHAR(20) trong database
       allowNull: false,
       defaultValue: "pending",
       validate: {
-        isIn: [["pending", "approved", "rejected", "cancelled"]], // ✅ Validation thay cho ENUM
+        isIn: [["pending", "approved", "rejected", "cancelled"]], //  Validation thay cho ENUM
       },
     },
     approvedBy: {
@@ -122,7 +122,7 @@ Leave.init(
       allowNull: true,
       field: "approved_by",
       references: {
-        model: "employee_information", // ✅ Dùng table name thay vì model class
+        model: "employee_information", //  Dùng table name thay vì model class
         key: "id",
       },
     },

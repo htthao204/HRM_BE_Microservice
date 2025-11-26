@@ -94,7 +94,7 @@ def train_model():
                     if len(faces) > 0:
                         for (x, y, w, h) in faces:
                             face_region = img_numpy[y:y+h, x:x+w]
-                            # ✅ QUAN TRỌNG: Đảm bảo kích thước đồng nhất
+                            #  QUAN TRỌNG: Đảm bảo kích thước đồng nhất
                             if face_region.size > 0:
                                 face_region = cv2.resize(face_region, (100, 100))
                                 faceSamples.append(face_region)
@@ -102,7 +102,7 @@ def train_model():
                                 employee_stats[employee_code]['success_faces'] += 1
                         
                         processed_count += 1
-                        print(f"✅ {record['employee_code']}_{record['image_order']}: {len(faces)} khuôn mặt")
+                        print(f" {record['employee_code']}_{record['image_order']}: {len(faces)} khuôn mặt")
                     else:
                         print(f"⚠️ {record['employee_code']}_{record['image_order']}: Không detect được khuôn mặt")
                         face_detection_errors += 1
@@ -122,7 +122,7 @@ def train_model():
         if len(faceSamples) == 0:
             return False, "[ERROR] Không thể detect khuôn mặt nào từ dataset!"
         
-        # ✅ SỬA LỖI QUAN TRỌNG: Chuẩn hóa dữ liệu training
+        #  SỬA LỖI QUAN TRỌNG: Chuẩn hóa dữ liệu training
         print(f"🎯 Chuẩn bị training với {len(faceSamples)} khuôn mặt...")
         
         # Đảm bảo tất cả faceSamples có cùng kích thước và kiểu dữ liệu
@@ -143,7 +143,7 @@ def train_model():
         if len(standardized_faces) == 0:
             return False, "[ERROR] Không có khuôn mặt hợp lệ sau khi chuẩn hóa!"
         
-        # ✅ Tạo numpy array đúng kiểu
+        #  Tạo numpy array đúng kiểu
         faceSamples_np = np.array(standardized_faces, dtype=np.uint8)
         ids_np = np.array(valid_ids, dtype=np.int32)
         
@@ -172,7 +172,7 @@ def train_model():
         unique_employees = len(np.unique(ids_np))
         total_images = len(dataset_records)
         
-        message = f"✅ HOÀN TẤT TRAINING\n"
+        message = f" HOÀN TẤT TRAINING\n"
         message += f"👥 Số nhân viên: {unique_employees}\n"
         message += f"📷 Tổng khuôn mặt: {len(faceSamples_np)}\n"
         message += f"🖼️ Ảnh đã xử lý: {processed_count}/{total_images}\n"
@@ -255,7 +255,7 @@ def train_employee(employee_id: int):
                     faceSamples.append(face)
                     ids.append(record['employee_id'])
 
-                print(f"✅ {record['image_order']} -> {len(faces)} khuôn mặt")
+                print(f" {record['image_order']} -> {len(faces)} khuôn mặt")
 
             except Exception as e:
                 print(f"❌ Lỗi xử lý ảnh: {str(e)}")
@@ -289,7 +289,7 @@ def train_employee(employee_id: int):
         recognizer.write(trainer_path)
 
         return True, f"""
-        ✅ Đã training thêm cho nhân viên:
+         Đã training thêm cho nhân viên:
         👤 {records[0]['employee_code']} - {records[0]['full_name']}
         📷 Số khuôn mặt: {len(faceSamples_np)}
         💾 Model đã cập nhật: {trainer_path}
@@ -317,7 +317,7 @@ def get_training_status():
         file_size = os.path.getsize(trainer_path)
         modified_time = time.ctime(os.path.getmtime(trainer_path))
         
-        return True, f"✅ Model đã sẵn sàng\n📏 Kích thước: {file_size} bytes\n⏰ Cập nhật: {modified_time}"
+        return True, f" Model đã sẵn sàng\n📏 Kích thước: {file_size} bytes\n⏰ Cập nhật: {modified_time}"
     
     except Exception as e:
         return False, f"❌ Model bị lỗi: {str(e)}"

@@ -83,30 +83,30 @@ AttendanceApproval.init(
     },
     approvalType: {
       field: "approval_type",
-      type: DataTypes.STRING(20), // ✅ Khớp với VARCHAR(20) trong database
+      type: DataTypes.STRING(20), //  Khớp với VARCHAR(20) trong database
       allowNull: false,
       defaultValue: "regular",
       validate: {
-        isIn: [["regular", "overtime", "adjustment"]], // ✅ Validation thay cho ENUM
+        isIn: [["regular", "overtime", "adjustment"]], //  Validation thay cho ENUM
       },
     },
     oldData: {
       field: "old_data",
-      type: DataTypes.JSONB, // ✅ Dùng JSONB cho PostgreSQL (tốt hơn JSON)
+      type: DataTypes.JSONB, //  Dùng JSONB cho PostgreSQL (tốt hơn JSON)
       allowNull: true,
     },
     newData: {
       field: "new_data",
-      type: DataTypes.JSONB, // ✅ Dùng JSONB cho PostgreSQL
+      type: DataTypes.JSONB, //  Dùng JSONB cho PostgreSQL
       allowNull: true,
     },
     approvalStatus: {
       field: "approval_status",
-      type: DataTypes.STRING(20), // ✅ Khớp với VARCHAR(20) trong database
+      type: DataTypes.STRING(20), //  Khớp với VARCHAR(20) trong database
       allowNull: false,
       defaultValue: "pending",
       validate: {
-        isIn: [["pending", "approved", "rejected"]], // ✅ Validation thay cho ENUM
+        isIn: [["pending", "approved", "rejected"]], //  Validation thay cho ENUM
       },
     },
     requestDate: {
@@ -141,7 +141,7 @@ AttendanceApproval.init(
     sequelize,
     tableName: "attendance_approvals",
     timestamps: true,
-    underscored: true, // ✅ Tự động convert camelCase to snake_case
+    underscored: true, //  Tự động convert camelCase to snake_case
     indexes: [
       {
         fields: ["attendance_id"],

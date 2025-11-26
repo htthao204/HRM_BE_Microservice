@@ -74,7 +74,7 @@ def capture_dataset(face_id, max_images=30, auto_delete_old=True):
             print(f"🗑️ Đã xóa {success_count}/{total_count} ảnh từ Cloudinary")
             cursor.execute("DELETE FROM employee_face_dataset WHERE employee_id=%s", (face_id,))
             conn.commit()
-            print("✅ Đã xóa dataset cũ từ database")
+            print(" Đã xóa dataset cũ từ database")
         else:
             print(f"🆕 Nhân viên {employee['full_name']} chưa có dataset. Bắt đầu chụp mới...")
 
@@ -117,7 +117,7 @@ def capture_dataset(face_id, max_images=30, auto_delete_old=True):
                             """, (employee['id'], image_url, count+1, f"{employee['employee_code']}_{count+1}.jpg"))
                             conn.commit()
                             success_count += 1
-                            print(f"✅ Upload & lưu ảnh {count+1}/{max_images}")
+                            print(f" Upload & lưu ảnh {count+1}/{max_images}")
                         except Exception as db_error:
                             print(f"❌ Lỗi lưu database: {db_error}")
                             conn.rollback()
@@ -143,11 +143,11 @@ def capture_dataset(face_id, max_images=30, auto_delete_old=True):
             try:
                 training_success, training_message = train_employee(face_id)
                 if training_success:
-                    return True, f"✅ Hoàn tất! Upload {success_count}/{max_images} ảnh & training thành công cho {employee['full_name']}"
+                    return True, f" Hoàn tất! Upload {success_count}/{max_images} ảnh & training thành công cho {employee['full_name']}"
                 else:
-                    return True, f"✅ Upload {success_count}/{max_images} ảnh thành công, nhưng training thất bại: {training_message}"
+                    return True, f" Upload {success_count}/{max_images} ảnh thành công, nhưng training thất bại: {training_message}"
             except Exception as e:
-                return True, f"✅ Upload {success_count}/{max_images} ảnh thành công, lỗi training: {str(e)}"
+                return True, f" Upload {success_count}/{max_images} ảnh thành công, lỗi training: {str(e)}"
         else:
             return False, f"❌ Không upload được ảnh nào cho {employee['full_name']}"
 

@@ -297,7 +297,7 @@ export const exportExcelController = async (req: Request, res: Response) => {
 
     const buffer = await exportEmployeesToExcelBuffer(filter);
 
-    console.log("✅ Export thành công, gửi file...");
+    console.log(" Export thành công, gửi file...");
 
     res.setHeader(
       "Content-Type",
@@ -439,7 +439,7 @@ export const getCurrentEmployeeController = async (
   next: NextFunction
 ) => {
   try {
-    // ✅ Lấy accountId từ token (đã được auth middleware set)
+    //  Lấy accountId từ token (đã được auth middleware set)
     const accountId = (req as any).user?.id;
 
     if (!accountId) {

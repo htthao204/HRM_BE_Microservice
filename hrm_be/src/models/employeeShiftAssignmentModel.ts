@@ -79,11 +79,11 @@ EmployeeShiftAssignment.init(
     },
     assignmentType: {
       field: "assignment_type",
-      type: DataTypes.STRING(10), // ✅ Khớp với VARCHAR(10) trong database
+      type: DataTypes.STRING(10), //  Khớp với VARCHAR(10) trong database
       allowNull: false,
       defaultValue: "regular",
       validate: {
-        isIn: [["regular", "overtime", "special"]], // ✅ Validation thay cho ENUM
+        isIn: [["regular", "overtime", "special"]], //  Validation thay cho ENUM
       },
     },
     approvedBy: {
@@ -96,11 +96,11 @@ EmployeeShiftAssignment.init(
       },
     },
     status: {
-      type: DataTypes.STRING(20), // ✅ Khớp với VARCHAR(20) trong database
+      type: DataTypes.STRING(20), //  Khớp với VARCHAR(20) trong database
       allowNull: false,
       defaultValue: "scheduled",
       validate: {
-        isIn: [["scheduled", "confirmed", "cancelled"]], // ✅ Validation thay cho ENUM
+        isIn: [["scheduled", "confirmed", "cancelled"]], //  Validation thay cho ENUM
       },
     },
     notes: {

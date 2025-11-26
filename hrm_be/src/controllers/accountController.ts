@@ -63,7 +63,7 @@ export const getMe = (req: AuthenticatedRequest, res: Response): Response => {
       });
     }
 
-    console.log("✅ GetMe success for user:", account.username);
+    console.log(" GetMe success for user:", account.username);
 
     // SỬA: Sử dụng ResultResponse format của bạn
     return res.json(

@@ -37,7 +37,7 @@ def capture_dataset(face_id, max_images=30, auto_delete_old=True):
         # Xóa từ database
         cursor.execute("DELETE FROM employee_face_dataset WHERE employee_id = %s", (face_id,))
         conn.commit()
-        print("✅ Đã xóa dataset cũ từ database")
+        print(" Đã xóa dataset cũ từ database")
     
     else:
         print(f"🆕 Nhân viên {employee['full_name']} chưa có dataset. Bắt đầu chụp ảnh mới...")
@@ -91,7 +91,7 @@ def capture_dataset(face_id, max_images=30, auto_delete_old=True):
                         """, (employee['id'], image_url, count + 1, f"{employee['employee_code']}_{count+1}.jpg"))
                         conn.commit()
                         success_count += 1
-                        print(f"✅ Đã upload và lưu ảnh {count + 1}/{max_images}")
+                        print(f" Đã upload và lưu ảnh {count + 1}/{max_images}")
                     except Exception as db_error:
                         print(f"❌ Lỗi lưu database: {db_error}")
                         conn.rollback()
@@ -135,7 +135,7 @@ def capture_dataset(face_id, max_images=30, auto_delete_old=True):
         return False, "❌ Không có ảnh hợp lệ để training."
     else:
         if train_ok:
-            return True, f"✅ Hoàn tất! Đã upload {success_count}/{max_images} ảnh và training model thành công cho nhân viên này!"
+            return True, f" Hoàn tất! Đã upload {success_count}/{max_images} ảnh và training model thành công cho nhân viên này!"
         else:
-            return True, f"✅ Đã upload {success_count}/{max_images} ảnh nhưng training cho nhân viên này lỗi: {train_msg}"
+            return True, f" Đã upload {success_count}/{max_images} ảnh nhưng training cho nhân viên này lỗi: {train_msg}"
 
